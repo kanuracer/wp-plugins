@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Formulare
- * Plugin URI: https://github.com/kanuracer/wp-plugins/formulare
+ * Plugin URI: https://github.com/kanuracer/wp-plugins/tree/main/formulare
  * Description: Erstellt Formulare wie Kontakt- oder Widerrufsformulare mit Formular-Baukasten und E-Mail-Einstellungen.
  * Version: 1.1.0
  * Author: kanuracer
