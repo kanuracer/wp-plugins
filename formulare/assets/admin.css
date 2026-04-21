@@ -1,0 +1,139 @@
+.formulare-admin.formulare-editor-wrap {
+    max-width: 1720px;
+}
+
+.formulare-admin .formulare-grid {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: minmax(320px, 1fr) minmax(420px, 1.2fr);
+    align-items: start;
+}
+
+.formulare-admin .formulare-card {
+    background: #fff;
+    border: 1px solid #dcdcde;
+    border-radius: 10px;
+    padding: 24px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.formulare-admin .formulare-toolbar {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 20px;
+}
+
+.formulare-admin .formulare-editor-card {
+    max-width: none;
+}
+
+.formulare-admin .formulare-editor-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(420px, 0.95fr);
+    gap: 28px;
+    align-items: start;
+}
+
+.formulare-admin .formulare-preview-panel {
+    position: sticky;
+    top: 32px;
+}
+
+.formulare-admin .formulare-preview-panel.is-collapsed .formulare-preview-surface {
+    display: none;
+}
+
+.formulare-admin .formulare-preview-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    align-items: flex-start;
+    margin-bottom: 12px;
+}
+
+.formulare-admin .formulare-preview-toggle {
+    white-space: nowrap;
+}
+
+.formulare-admin .formulare-preview-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.formulare-admin .formulare-preview-surface {
+    padding: 16px;
+    border: 1px solid #dcdcde;
+    border-radius: 12px;
+    background: #f6f7f7;
+}
+
+.formulare-admin .formulare-preview-frame {
+    display: block;
+    width: 100%;
+    min-height: 760px;
+    border: 0;
+    background: transparent;
+}
+
+.formulare-admin .formulare-settings-card {
+    max-width: 860px;
+}
+
+.formulare-admin .formulare-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.formulare-admin .formulare-actions form {
+    margin: 0;
+}
+
+.formulare-admin .formulare-builder-table input[type="text"],
+.formulare-admin .formulare-builder-table select {
+    width: 100%;
+}
+
+.formulare-admin textarea.large-text.code {
+    min-height: 220px;
+}
+
+.formulare-admin .formulare-settings-card + .formulare-settings-card {
+    margin-top: 24px;
+}
+
+.formulare-admin .formulare-log-summary {
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+    line-height: 1.45;
+}
+
+@media (max-width: 1100px) {
+    .formulare-admin .formulare-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .formulare-admin .formulare-editor-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .formulare-admin .formulare-preview-panel {
+        position: static;
+    }
+
+    .formulare-admin .formulare-toolbar {
+        flex-direction: column;
+    }
+
+    .formulare-admin .formulare-preview-header,
+    .formulare-admin .formulare-preview-controls {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
