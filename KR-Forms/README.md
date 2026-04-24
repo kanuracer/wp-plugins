@@ -94,6 +94,10 @@ In der Formularzusammenfassung per E-Mail bleiben diese Links erhalten und werde
 
 ## Changelog
 
+### 2.0.1
+
+- BOM am Anfang der PHP-Dateien entfernt, damit der WordPress-Block-Editor beim Speichern keine ungültige JSON-Antwort mehr meldet.
+
 ### 2.0.0
 
 - Vollständige technische Umbenennung von `formulare` auf `KR-Forms` bzw. `kr_forms`.
