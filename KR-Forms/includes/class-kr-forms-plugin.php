@@ -4,13 +4,13 @@ if (! defined('ABSPATH')) {
     exit;
 }
 
-final class Formulare_Plugin
+final class KR_Forms_Plugin
 {
     private static $instance = null;
 
-    private $forms_option = 'formulare_forms';
-    private $settings_option = 'formulare_email_settings';
-    private $legacy_design_option = 'formulare_design_settings';
+    private $forms_option = 'kr_forms_forms';
+    private $settings_option = 'kr_forms_email_settings';
+    private $legacy_design_option = 'kr_forms_design_settings';
 
     public static function instance()
     {
@@ -42,18 +42,18 @@ final class Formulare_Plugin
         add_action('admin_menu', array($this, 'register_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
-        add_action('admin_post_formulare_save_form', array($this, 'handle_save_form'));
-        add_action('admin_post_formulare_delete_form', array($this, 'handle_delete_form'));
-        add_action('admin_post_formulare_save_settings', array($this, 'handle_save_settings'));
-        add_action('admin_post_formulare_send_smtp_test', array($this, 'handle_send_smtp_test'));
-        add_action('admin_post_formulare_clear_security_log', array($this, 'handle_clear_security_log'));
-        add_action('admin_post_formulare_clear_request_log', array($this, 'handle_clear_request_log'));
-        add_action('admin_post_nopriv_formulare_captcha', array($this, 'handle_captcha_image'));
-        add_action('admin_post_formulare_captcha', array($this, 'handle_captcha_image'));
-        add_action('admin_post_nopriv_formulare_submit', array($this, 'handle_form_submission'));
-        add_action('admin_post_formulare_submit', array($this, 'handle_form_submission'));
+        add_action('admin_post_kr_forms_save_form', array($this, 'handle_save_form'));
+        add_action('admin_post_kr_forms_delete_form', array($this, 'handle_delete_form'));
+        add_action('admin_post_kr_forms_save_settings', array($this, 'handle_save_settings'));
+        add_action('admin_post_kr_forms_send_smtp_test', array($this, 'handle_send_smtp_test'));
+        add_action('admin_post_kr_forms_clear_security_log', array($this, 'handle_clear_security_log'));
+        add_action('admin_post_kr_forms_clear_request_log', array($this, 'handle_clear_request_log'));
+        add_action('admin_post_nopriv_kr_forms_captcha', array($this, 'handle_captcha_image'));
+        add_action('admin_post_kr_forms_captcha', array($this, 'handle_captcha_image'));
+        add_action('admin_post_nopriv_kr_forms_submit', array($this, 'handle_form_submission'));
+        add_action('admin_post_kr_forms_submit', array($this, 'handle_form_submission'));
         add_action('phpmailer_init', array($this, 'configure_phpmailer'));
-        add_shortcode('formulare', array($this, 'render_shortcode'));
+        add_shortcode('kr-forms', array($this, 'render_shortcode'));
     }
 
     public function register_admin_menu()
@@ -62,70 +62,70 @@ final class Formulare_Plugin
             'KR-Forms',
             'KR-Forms',
             'manage_options',
-            'formulare',
+            'kr-forms',
             array($this, 'render_forms_page'),
             'dashicons-feedback',
             56
         );
 
         add_submenu_page(
-            'formulare',
+            'kr-forms',
             'Formular bearbeiten',
             'Formular bearbeiten',
             'manage_options',
-            'formulare-editor',
+            'kr-forms-editor',
             array($this, 'render_form_editor_page')
         );
 
         add_submenu_page(
-            'formulare',
+            'kr-forms',
             'E-Mail-Einstellungen',
             'E-Mail-Einstellungen',
             'manage_options',
-            'formulare-settings',
+            'kr-forms-settings',
             array($this, 'render_settings_page')
         );
 
         add_submenu_page(
-            'formulare',
+            'kr-forms',
             'Allgemeines Protokoll',
             'Allgemeines Protokoll',
             'manage_options',
-            'formulare-request-log',
+            'kr-forms-request-log',
             array($this, 'render_request_log_page')
         );
 
         add_submenu_page(
-            'formulare',
+            'kr-forms',
             'Sicherheitsprotokoll',
             'Sicherheitsprotokoll',
             'manage_options',
-            'formulare-security-log',
+            'kr-forms-security-log',
             array($this, 'render_security_log_page')
         );
     }
 
     public function enqueue_admin_assets($hook)
     {
-        if (strpos($hook, 'formulare') === false) {
+        if (strpos($hook, 'kr-forms') === false) {
             return;
         }
 
         wp_enqueue_style(
-            'formulare-admin',
-            FORMULARE_PLUGIN_URL . 'assets/admin.css',
+            'kr-forms-admin',
+            KR_FORMS_PLUGIN_URL . 'assets/admin.css',
             array(),
-            FORMULARE_VERSION
+            KR_FORMS_VERSION
         );
     }
 
     public function enqueue_frontend_assets()
     {
         wp_enqueue_style(
-            'formulare-frontend',
-            FORMULARE_PLUGIN_URL . 'assets/frontend.css',
+            'kr-forms-frontend',
+            KR_FORMS_PLUGIN_URL . 'assets/frontend.css',
             array(),
-            FORMULARE_VERSION
+            KR_FORMS_VERSION
         );
 
     }
@@ -133,23 +133,23 @@ final class Formulare_Plugin
     public function render_forms_page()
     {
         if (! current_user_can('manage_options')) {
-            wp_die(esc_html__('Du hast keine Berechtigung für diese Seite.', 'formulare'));
+            wp_die(esc_html__('Du hast keine Berechtigung für diese Seite.', 'kr-forms'));
         }
 
         $forms = $this->get_forms();
         $settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
         ?>
-        <div class="wrap formulare-admin">
+        <div class="wrap kr-forms-admin">
             <h1>KR-Forms</h1>
             <?php $this->render_admin_notice(); ?>
 
-            <div class="formulare-card">
-                <div class="formulare-toolbar">
+            <div class="kr-forms-card">
+                <div class="kr-forms-toolbar">
                     <div>
                         <h2>Vorhandene Formulare</h2>
                         <p>Erstelle Kontakt-, Anfrage- oder Widerrufsformulare und nutze den Shortcode direkt in Seiten oder Beiträgen.</p>
                     </div>
-                    <a class="button button-primary" href="<?php echo esc_url(admin_url('admin.php?page=formulare-editor')); ?>">Neues Formular anlegen</a>
+                    <a class="button button-primary" href="<?php echo esc_url(admin_url('admin.php?page=kr-forms-editor')); ?>">Neues Formular anlegen</a>
                 </div>
                 <table class="widefat striped">
                     <thead>
@@ -168,12 +168,12 @@ final class Formulare_Plugin
                             <?php foreach ($forms as $saved_form) : ?>
                                 <tr>
                                     <td><?php echo esc_html($saved_form['name']); ?></td>
-                                    <td><code>[formulare id="<?php echo esc_attr($saved_form['id']); ?>"]</code></td>
-                                    <td class="formulare-actions">
-                                        <a class="button button-secondary" href="<?php echo esc_url(admin_url('admin.php?page=formulare-editor&edit=' . rawurlencode($saved_form['id']))); ?>">Bearbeiten</a>
+                                    <td><code>[kr-forms id="<?php echo esc_attr($saved_form['id']); ?>"]</code></td>
+                                    <td class="kr-forms-actions">
+                                        <a class="button button-secondary" href="<?php echo esc_url(admin_url('admin.php?page=kr-forms-editor&edit=' . rawurlencode($saved_form['id']))); ?>">Bearbeiten</a>
                                         <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" onsubmit="return confirm('Formular wirklich löschen?');">
-                                            <?php wp_nonce_field('formulare_delete_form'); ?>
-                                            <input type="hidden" name="action" value="formulare_delete_form">
+                                            <?php wp_nonce_field('kr_forms_delete_form'); ?>
+                                            <input type="hidden" name="action" value="kr_forms_delete_form">
                                             <input type="hidden" name="form_id" value="<?php echo esc_attr($saved_form['id']); ?>">
                                             <button type="submit" class="button button-link-delete">Löschen</button>
                                         </form>
@@ -191,7 +191,7 @@ final class Formulare_Plugin
     public function render_form_editor_page()
     {
         if (! current_user_can('manage_options')) {
-            wp_die(esc_html__('Du hast keine Berechtigung für diese Seite.', 'formulare'));
+            wp_die(esc_html__('Du hast keine Berechtigung für diese Seite.', 'kr-forms'));
         }
 
         $edit_id = isset($_GET['edit']) ? sanitize_key(wp_unslash($_GET['edit'])) : '';
@@ -202,34 +202,34 @@ final class Formulare_Plugin
         }
 
         ?>
-        <div class="wrap formulare-admin formulare-editor-wrap">
+        <div class="wrap kr-forms-admin kr-forms-editor-wrap">
             <h1><?php echo $edit_id ? 'Formular bearbeiten' : 'Neues Formular'; ?></h1>
             <?php $this->render_admin_notice(); ?>
 
-            <div class="formulare-card formulare-editor-card">
-                <p><a href="<?php echo esc_url(admin_url('admin.php?page=formulare')); ?>">&larr; Zur Formularübersicht</a></p>
+            <div class="kr-forms-card kr-forms-editor-card">
+                <p><a href="<?php echo esc_url(admin_url('admin.php?page=kr-forms')); ?>">&larr; Zur Formularübersicht</a></p>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                    <?php wp_nonce_field('formulare_save_form'); ?>
-                    <input type="hidden" name="action" value="formulare_save_form">
+                    <?php wp_nonce_field('kr_forms_save_form'); ?>
+                    <input type="hidden" name="action" value="kr_forms_save_form">
                     <input type="hidden" name="form_id" value="<?php echo esc_attr($form['id']); ?>">
 
-                    <div class="formulare-editor-layout">
-                        <div class="formulare-editor-main">
+                    <div class="kr-forms-editor-layout">
+                        <div class="kr-forms-editor-main">
                             <h3>Allgemein</h3>
                             <table class="form-table">
                                 <tr>
-                                    <th scope="row"><label for="formulare-name">Name</label></th>
-                                    <td><input id="formulare-name" name="name" type="text" class="regular-text" required value="<?php echo esc_attr($form['name']); ?>"></td>
+                                    <th scope="row"><label for="kr-forms-name">Name</label></th>
+                                    <td><input id="kr-forms-name" name="name" type="text" class="regular-text" required value="<?php echo esc_attr($form['name']); ?>"></td>
                                 </tr>
                                 <tr>
-                                    <th scope="row"><label for="formulare-success">Erfolgsmeldung</label></th>
-                                    <td><input id="formulare-success" name="success_message" type="text" class="regular-text" value="<?php echo esc_attr($form['success_message']); ?>"></td>
+                                    <th scope="row"><label for="kr-forms-success">Erfolgsmeldung</label></th>
+                                    <td><input id="kr-forms-success" name="success_message" type="text" class="regular-text" value="<?php echo esc_attr($form['success_message']); ?>"></td>
                                 </tr>
                                 <tr>
-                                    <th scope="row"><label for="formulare-captcha-enabled">Eigenes Captcha</label></th>
+                                    <th scope="row"><label for="kr-forms-captcha-enabled">Eigenes Captcha</label></th>
                                     <td>
                                         <label>
-                                            <input id="formulare-captcha-enabled" name="captcha_enabled" type="checkbox" value="1" <?php checked(! empty($form['captcha_enabled'])); ?>>
+                                            <input id="kr-forms-captcha-enabled" name="captcha_enabled" type="checkbox" value="1" <?php checked(! empty($form['captcha_enabled'])); ?>>
                                             Eigenes Bild-Captcha vor dem Absenden anzeigen
                                         </label>
                                     </td>
@@ -238,7 +238,7 @@ final class Formulare_Plugin
 
                             <h3>Felder</h3>
                             <p>Die Feldnamen werden intern genutzt. Verwende einfache Namen wie <code>email</code>, <code>nachricht</code> oder <code>telefon</code>.</p>
-                            <table class="widefat striped formulare-builder-table">
+                            <table class="widefat striped kr-forms-builder-table">
                                 <thead>
                                     <tr>
                                         <th>Label</th>
@@ -248,7 +248,7 @@ final class Formulare_Plugin
                                         <th></th>
                                     </tr>
                                 </thead>
-                                <tbody id="formulare-builder-body">
+                                <tbody id="kr-forms-builder-body">
                                     <?php foreach ($form['fields'] as $index => $field) : ?>
                                         <?php $this->render_field_row($field, $index); ?>
                                     <?php endforeach; ?>
@@ -256,14 +256,14 @@ final class Formulare_Plugin
                             </table>
 
                             <p>
-                                <button type="button" class="button" id="formulare-add-field">Feld hinzufügen</button>
+                                <button type="button" class="button" id="kr-forms-add-field">Feld hinzufügen</button>
                             </p>
 
                             <h3>E-Mail</h3>
                             <table class="form-table">
                                 <tr>
-                                    <th scope="row"><label for="formulare-subject">E-Mail-Betreff</label></th>
-                                    <td><input id="formulare-subject" name="email_subject" type="text" class="regular-text" value="<?php echo esc_attr($form['email_subject']); ?>"></td>
+                                    <th scope="row"><label for="kr-forms-subject">E-Mail-Betreff</label></th>
+                                    <td><input id="kr-forms-subject" name="email_subject" type="text" class="regular-text" value="<?php echo esc_attr($form['email_subject']); ?>"></td>
                                 </tr>
                                 <tr>
                                     <th scope="row"><label for="customer_confirmation_enabled">Bestätigung an Kunden</label></th>
@@ -275,9 +275,9 @@ final class Formulare_Plugin
                                     </td>
                                 </tr>
                                 <tr>
-                                    <th scope="row"><label for="formulare-template">E-Mail-Text</label></th>
+                                    <th scope="row"><label for="kr-forms-template">E-Mail-Text</label></th>
                                     <td>
-                                        <textarea id="formulare-template" name="email_template" rows="10" class="large-text code"><?php echo esc_textarea($form['email_template']); ?></textarea>
+                                        <textarea id="kr-forms-template" name="email_template" rows="10" class="large-text code"><?php echo esc_textarea($form['email_template']); ?></textarea>
                                         <p class="description">Verfügbare Platzhalter: <code>{form_name}</code>, <code>{page_url}</code>, <code>{submitted_at}</code>, <code>{all_fields}</code>, <code>{field:name}</code>.</p>
                                     </td>
                                 </tr>
@@ -364,24 +364,24 @@ final class Formulare_Plugin
 
                             <p class="submit">
                                 <button type="submit" class="button button-primary">Formular speichern</button>
-                                <a class="button button-secondary" href="<?php echo esc_url(admin_url('admin.php?page=formulare')); ?>">Zur Übersicht</a>
+                                <a class="button button-secondary" href="<?php echo esc_url(admin_url('admin.php?page=kr-forms')); ?>">Zur Übersicht</a>
                             </p>
                         </div>
 
-                        <aside class="formulare-preview-panel">
-                            <div class="formulare-preview-header">
+                        <aside class="kr-forms-preview-panel">
+                            <div class="kr-forms-preview-header">
                                 <div>
                                     <h3>Vorschau</h3>
                                     <p class="description">Die Vorschau aktualisiert sich direkt beim Bearbeiten.</p>
                                 </div>
-                                <label class="formulare-preview-toggle">
-                                    <input id="formulare-preview-enabled" type="checkbox" checked>
+                                <label class="kr-forms-preview-toggle">
+                                    <input id="kr-forms-preview-enabled" type="checkbox" checked>
                                     Vorschau anzeigen
                                 </label>
                             </div>
-                            <div class="formulare-preview-controls" id="formulare-preview-controls">
-                                <label for="formulare-preview-page-background">Seitenhintergrund</label>
-                                <input id="formulare-preview-page-background" name="editor_preview_background" type="color" value="<?php echo esc_attr($settings['editor_preview_background']); ?>">
+                            <div class="kr-forms-preview-controls" id="kr-forms-preview-controls">
+                                <label for="kr-forms-preview-page-background">Seitenhintergrund</label>
+                                <input id="kr-forms-preview-page-background" name="editor_preview_background" type="color" value="<?php echo esc_attr($settings['editor_preview_background']); ?>">
                             </div>
                             <?php $this->render_editor_preview($form); ?>
                         </aside>
@@ -390,19 +390,19 @@ final class Formulare_Plugin
             </div>
         </div>
 
-        <script type="text/html" id="tmpl-formulare-field-row">
+        <script type="text/html" id="tmpl-kr-forms-field-row">
             <?php $this->render_field_row($this->default_field(), '{{INDEX}}'); ?>
         </script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                const addButton = document.getElementById('formulare-add-field');
-                const tbody = document.getElementById('formulare-builder-body');
+                const addButton = document.getElementById('kr-forms-add-field');
+                const tbody = document.getElementById('kr-forms-builder-body');
                 const formEditor = addButton ? addButton.closest('form') : null;
-                const previewFrame = document.getElementById('formulare-preview-frame');
-                const previewEnabled = document.getElementById('formulare-preview-enabled');
-                const previewControls = document.getElementById('formulare-preview-controls');
-                const previewPanel = document.querySelector('.formulare-preview-panel');
-                const previewPageBackground = document.getElementById('formulare-preview-page-background');
+                const previewFrame = document.getElementById('kr-forms-preview-frame');
+                const previewEnabled = document.getElementById('kr-forms-preview-enabled');
+                const previewControls = document.getElementById('kr-forms-preview-controls');
+                const previewPanel = document.querySelector('.kr-forms-preview-panel');
+                const previewPageBackground = document.getElementById('kr-forms-preview-page-background');
                 let index = tbody.querySelectorAll('tr').length;
 
                 if (!addButton || !tbody || !formEditor || !previewFrame || !previewEnabled || !previewControls || !previewPanel || !previewPageBackground) {
@@ -473,51 +473,51 @@ final class Formulare_Plugin
                 const previewCss = <?php echo wp_json_encode($this->get_frontend_preview_css()); ?>;
 
                 const buildPreviewField = function (label, type, required) {
-                    const marker = required ? '<span class="formulare-required">*</span>' : '';
+                    const marker = required ? '<span class="kr-forms-required">*</span>' : '';
                     const safeLabel = sanitizePreviewLabel(label || 'Feld');
                     if (type === 'textarea') {
-                        return '<p class="formulare-field"><label>' + safeLabel + ' ' + marker + '</label><textarea disabled></textarea></p>';
+                        return '<p class="kr-forms-field"><label>' + safeLabel + ' ' + marker + '</label><textarea disabled></textarea></p>';
                     }
                     if (type === 'checkbox') {
-                        return '<p class="formulare-field"><label>' + safeLabel + ' ' + marker + '</label><input type="checkbox" disabled></p>';
+                        return '<p class="kr-forms-field"><label>' + safeLabel + ' ' + marker + '</label><input type="checkbox" disabled></p>';
                     }
 
-                    return '<p class="formulare-field"><label>' + safeLabel + ' ' + marker + '</label><input type="' + escapeHtml(type || 'text') + '" disabled value=""></p>';
+                    return '<p class="kr-forms-field"><label>' + safeLabel + ' ' + marker + '</label><input type="' + escapeHtml(type || 'text') + '" disabled value=""></p>';
                 };
 
                 const buildPreviewDocument = function (fieldsHtml) {
                     const styleVars = [
-                        '--formulare-text-color:' + getFieldValue('design[style_text_color]', '#0f172a'),
-                        '--formulare-label-color:' + getFieldValue('design[style_label_color]', '#0f172a'),
-                        '--formulare-background:' + (getFieldValue('design[style_background_mode]') === 'transparent' ? 'transparent' : getFieldValue('design[style_background_color]', '#f8fafc')),
-                        '--formulare-field-background:' + getBackgroundValue('design[style_field_background_mode]', 'design[style_field_background]'),
-                        '--formulare-border-color:' + getFieldValue('design[style_border_color]', '#c7d0db'),
-                        '--formulare-button-background:' + getFieldValue('design[style_button_background]', '#0f766e'),
-                        '--formulare-button-text:' + getFieldValue('design[style_button_text]', '#ffffff'),
-                        '--formulare-success-background:' + getBackgroundValue('design[style_success_background_mode]', 'design[style_success_background]'),
-                        '--formulare-success-text:' + getFieldValue('design[style_success_text]', '#14532d'),
-                        '--formulare-error-background:' + getBackgroundValue('design[style_error_background_mode]', 'design[style_error_background]'),
-                        '--formulare-error-text:' + getFieldValue('design[style_error_text]', '#7f1d1d'),
-                        '--formulare-radius:' + getFieldValue('design[style_border_radius]', '14') + 'px'
+                        '--kr-forms-text-color:' + getFieldValue('design[style_text_color]', '#0f172a'),
+                        '--kr-forms-label-color:' + getFieldValue('design[style_label_color]', '#0f172a'),
+                        '--kr-forms-background:' + (getFieldValue('design[style_background_mode]') === 'transparent' ? 'transparent' : getFieldValue('design[style_background_color]', '#f8fafc')),
+                        '--kr-forms-field-background:' + getBackgroundValue('design[style_field_background_mode]', 'design[style_field_background]'),
+                        '--kr-forms-border-color:' + getFieldValue('design[style_border_color]', '#c7d0db'),
+                        '--kr-forms-button-background:' + getFieldValue('design[style_button_background]', '#0f766e'),
+                        '--kr-forms-button-text:' + getFieldValue('design[style_button_text]', '#ffffff'),
+                        '--kr-forms-success-background:' + getBackgroundValue('design[style_success_background_mode]', 'design[style_success_background]'),
+                        '--kr-forms-success-text:' + getFieldValue('design[style_success_text]', '#14532d'),
+                        '--kr-forms-error-background:' + getBackgroundValue('design[style_error_background_mode]', 'design[style_error_background]'),
+                        '--kr-forms-error-text:' + getFieldValue('design[style_error_text]', '#7f1d1d'),
+                        '--kr-forms-radius:' + getFieldValue('design[style_border_radius]', '14') + 'px'
                     ].join(';');
 
                     const captchaHtml = isChecked('captcha_enabled')
-                        ? '<p class="formulare-field"><label>Sicherheitscode <span class="formulare-required">*</span></label><input type="text" disabled value=""><div class="formulare-captcha-placeholder">CAPTCHA</div><span class="formulare-captcha-question">Bitte die Zeichen aus dem Bild eingeben.</span></p>'
+                        ? '<p class="kr-forms-field"><label>Sicherheitscode <span class="kr-forms-required">*</span></label><input type="text" disabled value=""><div class="kr-forms-captcha-placeholder">CAPTCHA</div><span class="kr-forms-captcha-question">Bitte die Zeichen aus dem Bild eingeben.</span></p>'
                         : '';
 
                     return '<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"><style>' +
                         previewCss +
                         'body{margin:0;padding:16px;background:' + escapeHtml(previewPageBackground.value || '#f6f7f7') + ';font-family:Arial,sans-serif;}' +
-                        '.formulare-preview-shell{max-width:760px;}' +
-                        '.formulare-form{pointer-events:none;}' +
-                        '.formulare-form input,.formulare-form textarea,.formulare-form button{opacity:1;}' +
-                        '.formulare-captcha-placeholder{display:block;margin-top:10px;padding:12px 14px;border:1px solid var(--formulare-border-color);border-radius:calc(var(--formulare-radius) - 4px);background:repeating-linear-gradient(135deg,#e5e7eb,#e5e7eb 8px,#f9fafb 8px,#f9fafb 16px);font-weight:700;letter-spacing:0.4em;text-align:center;}' +
-                        '</style></head><body><div class="formulare-preview-shell"><div class="formulare-form-wrapper" style="' + styleVars + '"><div class="formulare-notice formulare-notice-success">' +
+                        '.kr-forms-preview-shell{max-width:760px;}' +
+                        '.kr-forms-form{pointer-events:none;}' +
+                        '.kr-forms-form input,.kr-forms-form textarea,.kr-forms-form button{opacity:1;}' +
+                        '.kr-forms-captcha-placeholder{display:block;margin-top:10px;padding:12px 14px;border:1px solid var(--kr-forms-border-color);border-radius:calc(var(--kr-forms-radius) - 4px);background:repeating-linear-gradient(135deg,#e5e7eb,#e5e7eb 8px,#f9fafb 8px,#f9fafb 16px);font-weight:700;letter-spacing:0.4em;text-align:center;}' +
+                        '</style></head><body><div class="kr-forms-preview-shell"><div class="kr-forms-form-wrapper" style="' + styleVars + '"><div class="kr-forms-notice kr-forms-notice-success">' +
                         escapeHtml(getFieldValue('success_message', 'Vielen Dank. Deine Anfrage wurde erfolgreich gesendet.')) +
-                        '</div><div class="formulare-form">' +
+                        '</div><div class="kr-forms-form">' +
                         fieldsHtml +
                         captchaHtml +
-                        '<button type="button" class="formulare-submit" disabled>Absenden</button></div></div></div></body></html>';
+                        '<button type="button" class="kr-forms-submit" disabled>Absenden</button></div></div></div></body></html>';
                 };
 
                 const updatePreview = function () {
@@ -541,14 +541,14 @@ final class Formulare_Plugin
                 };
 
                 addButton.addEventListener('click', function () {
-                    const template = document.getElementById('tmpl-formulare-field-row').innerHTML.replaceAll('{{INDEX}}', index);
+                    const template = document.getElementById('tmpl-kr-forms-field-row').innerHTML.replaceAll('{{INDEX}}', index);
                     tbody.insertAdjacentHTML('beforeend', template);
                     index += 1;
                     updatePreview();
                 });
 
                 tbody.addEventListener('click', function (event) {
-                    if (!event.target.classList.contains('formulare-remove-field')) {
+                    if (!event.target.classList.contains('kr-forms-remove-field')) {
                         return;
                     }
 
@@ -580,19 +580,19 @@ final class Formulare_Plugin
     public function render_settings_page()
     {
         if (! current_user_can('manage_options')) {
-            wp_die(esc_html__('Du hast keine Berechtigung für diese Seite.', 'formulare'));
+            wp_die(esc_html__('Du hast keine Berechtigung für diese Seite.', 'kr-forms'));
         }
 
         $settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
         ?>
-        <div class="wrap formulare-admin">
+        <div class="wrap kr-forms-admin">
             <h1>E-Mail-Einstellungen</h1>
             <?php $this->render_admin_notice(); ?>
 
-            <div class="formulare-card formulare-settings-card">
+            <div class="kr-forms-card kr-forms-settings-card">
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                    <?php wp_nonce_field('formulare_save_settings'); ?>
-                    <input type="hidden" name="action" value="formulare_save_settings">
+                    <?php wp_nonce_field('kr_forms_save_settings'); ?>
+                    <input type="hidden" name="action" value="kr_forms_save_settings">
 
                     <table class="form-table">
                         <tr>
@@ -764,12 +764,12 @@ final class Formulare_Plugin
                 </form>
             </div>
 
-                <div class="formulare-card formulare-settings-card">
+                <div class="kr-forms-card kr-forms-settings-card">
                     <h2>SMTP-Test</h2>
                     <p>Speichere zunächst die SMTP-Einstellungen. Der Testversand verwendet die aktuell gespeicherten Werte.</p>
                     <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                    <?php wp_nonce_field('formulare_send_smtp_test'); ?>
-                    <input type="hidden" name="action" value="formulare_send_smtp_test">
+                    <?php wp_nonce_field('kr_forms_send_smtp_test'); ?>
+                    <input type="hidden" name="action" value="kr_forms_send_smtp_test">
                     <table class="form-table">
                         <tr>
                             <th scope="row"><label for="test_email">Test-E-Mail an</label></th>
@@ -790,19 +790,19 @@ final class Formulare_Plugin
     public function render_security_log_page()
     {
         if (! current_user_can('manage_options')) {
-            wp_die(esc_html__('Du hast keine Berechtigung für diese Seite.', 'formulare'));
+            wp_die(esc_html__('Du hast keine Berechtigung für diese Seite.', 'kr-forms'));
         }
 
         $entries = $this->get_security_log_entries();
         ?>
-        <div class="wrap formulare-admin">
+        <div class="wrap kr-forms-admin">
             <h1>Sicherheitsprotokoll</h1>
             <?php $this->render_admin_notice(); ?>
-            <div class="formulare-card formulare-settings-card">
+            <div class="kr-forms-card kr-forms-settings-card">
                 <p>Hier werden blockierte oder auffällige Anfragen protokolliert.</p>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                    <input type="hidden" name="action" value="formulare_clear_security_log">
-                    <?php wp_nonce_field('formulare_clear_security_log'); ?>
+                    <input type="hidden" name="action" value="kr_forms_clear_security_log">
+                    <?php wp_nonce_field('kr_forms_clear_security_log'); ?>
                     <p><button type="submit" class="button button-secondary" onclick="return window.confirm('Sicherheitsprotokoll wirklich leeren?');">Sicherheitsprotokoll leeren</button></p>
                 </form>
                 <table class="widefat striped">
@@ -841,24 +841,24 @@ final class Formulare_Plugin
     public function render_request_log_page()
     {
         if (! current_user_can('manage_options')) {
-            wp_die(esc_html__('Du hast keine Berechtigung für diese Seite.', 'formulare'));
+            wp_die(esc_html__('Du hast keine Berechtigung für diese Seite.', 'kr-forms'));
         }
 
         $this->create_request_log_table();
         $entries = $this->get_request_log_entries();
         ?>
-        <div class="wrap formulare-admin">
+        <div class="wrap kr-forms-admin">
             <h1>Allgemeines Protokoll</h1>
             <?php $this->render_admin_notice(); ?>
-            <div class="formulare-card formulare-log-card">
+            <div class="kr-forms-card kr-forms-log-card">
                 <p>Hier werden alle Formularanfragen inklusive erfolgreicher und fehlgeschlagener Versuche protokolliert.</p>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                    <input type="hidden" name="action" value="formulare_clear_request_log">
-                    <?php wp_nonce_field('formulare_clear_request_log'); ?>
+                    <input type="hidden" name="action" value="kr_forms_clear_request_log">
+                    <?php wp_nonce_field('kr_forms_clear_request_log'); ?>
                     <p><button type="submit" class="button button-secondary" onclick="return window.confirm('Allgemeines Protokoll wirklich leeren?');">Allgemeines Protokoll leeren</button></p>
                 </form>
-                <div class="formulare-table-wrap">
-                    <table class="widefat striped formulare-request-log-table">
+                <div class="kr-forms-table-wrap">
+                    <table class="widefat striped kr-forms-request-log-table">
                         <thead>
                             <tr>
                                 <th>Zeitpunkt</th>
@@ -881,10 +881,10 @@ final class Formulare_Plugin
                                         <td><?php echo esc_html($entry['timestamp']); ?></td>
                                         <td><?php echo esc_html($entry['status']); ?></td>
                                         <td><?php echo esc_html($entry['form_name']); ?></td>
-                                        <td><code class="formulare-log-url"><?php echo esc_html($entry['page_url']); ?></code></td>
+                                        <td><code class="kr-forms-log-url"><?php echo esc_html($entry['page_url']); ?></code></td>
                                         <td><?php echo esc_html($entry['email']); ?></td>
-                                        <td><pre class="formulare-log-summary"><?php echo esc_html($entry['summary']); ?></pre></td>
-                                        <td class="formulare-log-details"><?php echo esc_html($entry['details']); ?></td>
+                                        <td><pre class="kr-forms-log-summary"><?php echo esc_html($entry['summary']); ?></pre></td>
+                                        <td class="kr-forms-log-details"><?php echo esc_html($entry['details']); ?></td>
                                     </tr>
                                 <?php endforeach; ?>
                             <?php endif; ?>
@@ -898,7 +898,7 @@ final class Formulare_Plugin
 
     public function handle_save_form()
     {
-        $this->ensure_admin_request('formulare_save_form');
+        $this->ensure_admin_request('kr_forms_save_form');
 
         $name = isset($_POST['name']) ? sanitize_text_field(wp_unslash($_POST['name'])) : '';
         $form_id = isset($_POST['form_id']) ? sanitize_key(wp_unslash($_POST['form_id'])) : '';
@@ -907,7 +907,7 @@ final class Formulare_Plugin
         $email_template = isset($_POST['email_template']) ? sanitize_textarea_field(wp_unslash($_POST['email_template'])) : '';
 
         if ($name === '') {
-            $this->redirect_admin('formulare', array('message' => 'missing_name'));
+            $this->redirect_admin('kr-forms', array('message' => 'missing_name'));
         }
 
         if ($form_id === '') {
@@ -941,7 +941,7 @@ final class Formulare_Plugin
         );
         update_option($this->settings_option, $settings);
 
-        $this->redirect_admin('formulare-editor', array(
+        $this->redirect_admin('kr-forms-editor', array(
             'message' => 'saved',
             'edit' => $form_id,
         ));
@@ -949,7 +949,7 @@ final class Formulare_Plugin
 
     public function handle_delete_form()
     {
-        $this->ensure_admin_request('formulare_delete_form');
+        $this->ensure_admin_request('kr_forms_delete_form');
 
         $form_id = isset($_POST['form_id']) ? sanitize_key(wp_unslash($_POST['form_id'])) : '';
         $forms = $this->get_forms();
@@ -959,12 +959,12 @@ final class Formulare_Plugin
             update_option($this->forms_option, $forms);
         }
 
-        $this->redirect_admin('formulare', array('message' => 'deleted'));
+        $this->redirect_admin('kr-forms', array('message' => 'deleted'));
     }
 
     public function handle_save_settings()
     {
-        $this->ensure_admin_request('formulare_save_settings');
+        $this->ensure_admin_request('kr_forms_save_settings');
 
         $existing_settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
         $submitted_smtp_password = isset($_POST['smtp_password']) ? sanitize_text_field(wp_unslash($_POST['smtp_password'])) : '';
@@ -1003,32 +1003,32 @@ final class Formulare_Plugin
 
         update_option($this->settings_option, wp_parse_args($settings, $this->default_settings()));
 
-        $this->redirect_admin('formulare-settings', array('message' => 'settings_saved'));
+        $this->redirect_admin('kr-forms-settings', array('message' => 'settings_saved'));
     }
 
     public function handle_clear_security_log()
     {
-        $this->ensure_admin_request('formulare_clear_security_log');
+        $this->ensure_admin_request('kr_forms_clear_security_log');
         $this->clear_log_table($this->get_security_log_table_name());
-        $this->redirect_admin('formulare-security-log', array('message' => 'security_log_cleared'));
+        $this->redirect_admin('kr-forms-security-log', array('message' => 'security_log_cleared'));
     }
 
     public function handle_clear_request_log()
     {
-        $this->ensure_admin_request('formulare_clear_request_log');
+        $this->ensure_admin_request('kr_forms_clear_request_log');
         $this->create_request_log_table();
         $this->clear_log_table($this->get_request_log_table_name());
-        $this->redirect_admin('formulare-request-log', array('message' => 'request_log_cleared'));
+        $this->redirect_admin('kr-forms-request-log', array('message' => 'request_log_cleared'));
     }
 
     public function handle_send_smtp_test()
     {
-        $this->ensure_admin_request('formulare_send_smtp_test');
+        $this->ensure_admin_request('kr_forms_send_smtp_test');
 
         $target = isset($_POST['test_email']) ? sanitize_email(wp_unslash($_POST['test_email'])) : '';
 
         if (! is_email($target)) {
-            $this->redirect_admin('formulare-settings', array('message' => 'smtp_test_invalid'));
+            $this->redirect_admin('kr-forms-settings', array('message' => 'smtp_test_invalid'));
         }
 
         $settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
@@ -1054,7 +1054,7 @@ final class Formulare_Plugin
             $this->record_security_event('smtp_test_failed', '', 'SMTP-Test', 'SMTP-Testversand fehlgeschlagen.');
         }
 
-        $this->redirect_admin('formulare-settings', array('message' => $sent ? 'smtp_test_sent' : 'smtp_test_failed'));
+        $this->redirect_admin('kr-forms-settings', array('message' => $sent ? 'smtp_test_sent' : 'smtp_test_failed'));
     }
 
     public function handle_form_submission()
@@ -1063,9 +1063,9 @@ final class Formulare_Plugin
         $redirect = isset($_POST['redirect_to']) ? esc_url_raw(wp_unslash($_POST['redirect_to'])) : home_url('/');
         $nonce = isset($_POST['_wpnonce']) ? wp_unslash($_POST['_wpnonce']) : '';
         $honeypot = isset($_POST['website']) ? trim((string) wp_unslash($_POST['website'])) : '';
-        $posted_email = isset($_POST['formulare']['email']) ? sanitize_email(wp_unslash($_POST['formulare']['email'])) : '';
+        $posted_email = isset($_POST['kr_forms']['email']) ? sanitize_email(wp_unslash($_POST['kr_forms']['email'])) : '';
 
-        if (! wp_verify_nonce($nonce, 'formulare_submit_' . $form_id)) {
+        if (! wp_verify_nonce($nonce, 'kr_forms_submit_' . $form_id)) {
             $this->record_request_event('security_error', $form_id, '', $redirect, $posted_email, 'Nonce-Prüfung fehlgeschlagen.');
             $this->record_security_event('security_error', $form_id, '', 'Nonce-Prüfung fehlgeschlagen.', true);
             $this->redirect_submission($redirect, 'security_error', $form_id);
@@ -1108,7 +1108,7 @@ final class Formulare_Plugin
 
         foreach ($form['fields'] as $field) {
             $field_name = $field['name'];
-            $raw_value = isset($_POST['formulare'][$field_name]) ? wp_unslash($_POST['formulare'][$field_name]) : '';
+            $raw_value = isset($_POST['kr_forms'][$field_name]) ? wp_unslash($_POST['kr_forms'][$field_name]) : '';
             $value = is_array($raw_value) ? implode(', ', array_map('sanitize_text_field', $raw_value)) : sanitize_textarea_field($raw_value);
 
             if ($field['type'] === 'email' && $value !== '') {
@@ -1193,36 +1193,36 @@ final class Formulare_Plugin
                 'id' => '',
             ),
             $atts,
-            'formulare'
+            'kr-forms'
         );
 
         $form = $this->get_form($atts['id']);
 
         if (! $form) {
-            return '<div class="formulare-notice formulare-notice-error">Formular nicht gefunden.</div>';
+            return '<div class="kr-forms-notice kr-forms-notice-error">Formular nicht gefunden.</div>';
         }
 
-        $status = isset($_GET['formulare_status'], $_GET['formulare_id'])
-            ? sanitize_key(wp_unslash($_GET['formulare_status']))
+        $status = isset($_GET['kr_forms_status'], $_GET['kr_forms_id'])
+            ? sanitize_key(wp_unslash($_GET['kr_forms_status']))
             : '';
-        $status_form_id = isset($_GET['formulare_id']) ? sanitize_key(wp_unslash($_GET['formulare_id'])) : '';
+        $status_form_id = isset($_GET['kr_forms_id']) ? sanitize_key(wp_unslash($_GET['kr_forms_id'])) : '';
 
         ob_start();
         ?>
         <?php $captcha = ! empty($form['captcha_enabled']) ? $this->create_captcha_challenge($form['id']) : null; ?>
-        <div class="formulare-form-wrapper" style="<?php echo esc_attr($this->build_form_style($form)); ?>">
+        <div class="kr-forms-form-wrapper" style="<?php echo esc_attr($this->build_form_style($form)); ?>">
             <?php if ($status_form_id === $form['id']) : ?>
                 <?php echo wp_kses_post($this->render_frontend_notice($status, $form)); ?>
             <?php endif; ?>
-            <form class="formulare-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
-                <input type="hidden" name="action" value="formulare_submit">
+            <form class="kr-forms-form" method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <input type="hidden" name="action" value="kr_forms_submit">
                 <input type="hidden" name="form_id" value="<?php echo esc_attr($form['id']); ?>">
                 <input type="hidden" name="redirect_to" value="<?php echo esc_url($this->current_url()); ?>">
-                <?php wp_nonce_field('formulare_submit_' . $form['id']); ?>
+                <?php wp_nonce_field('kr_forms_submit_' . $form['id']); ?>
 
-                <div class="formulare-honeypot" aria-hidden="true">
-                    <label for="formulare-website-<?php echo esc_attr($form['id']); ?>">Website</label>
-                    <input id="formulare-website-<?php echo esc_attr($form['id']); ?>" type="text" name="website" tabindex="-1" autocomplete="off">
+                <div class="kr-forms-honeypot" aria-hidden="true">
+                    <label for="kr-forms-website-<?php echo esc_attr($form['id']); ?>">Website</label>
+                    <input id="kr-forms-website-<?php echo esc_attr($form['id']); ?>" type="text" name="website" tabindex="-1" autocomplete="off">
                 </div>
 
                 <?php foreach ($form['fields'] as $field) : ?>
@@ -1230,19 +1230,19 @@ final class Formulare_Plugin
                 <?php endforeach; ?>
 
                 <?php if ($captcha) : ?>
-                    <p class="formulare-field">
-                        <label for="formulare-captcha-<?php echo esc_attr($form['id']); ?>">
+                    <p class="kr-forms-field">
+                        <label for="kr-forms-captcha-<?php echo esc_attr($form['id']); ?>">
                             Sicherheitscode
-                            <span class="formulare-required">*</span>
+                            <span class="kr-forms-required">*</span>
                         </label>
-                        <input id="formulare-captcha-<?php echo esc_attr($form['id']); ?>" type="text" name="formulare_captcha_answer" required inputmode="text" autocomplete="off" spellcheck="false">
-                        <input type="hidden" name="formulare_captcha_token" value="<?php echo esc_attr($captcha['token']); ?>">
-                        <img class="formulare-captcha-image" src="<?php echo esc_url($captcha['image_url']); ?>" alt="Captcha">
-                        <span class="formulare-captcha-question">Bitte die Zeichen aus dem Bild eingeben.</span>
+                        <input id="kr-forms-captcha-<?php echo esc_attr($form['id']); ?>" type="text" name="kr_forms_captcha_answer" required inputmode="text" autocomplete="off" spellcheck="false">
+                        <input type="hidden" name="kr_forms_captcha_token" value="<?php echo esc_attr($captcha['token']); ?>">
+                        <img class="kr-forms-captcha-image" src="<?php echo esc_url($captcha['image_url']); ?>" alt="Captcha">
+                        <span class="kr-forms-captcha-question">Bitte die Zeichen aus dem Bild eingeben.</span>
                     </p>
                 <?php endif; ?>
 
-                <button type="submit" class="formulare-submit">Absenden</button>
+                <button type="submit" class="kr-forms-submit">Absenden</button>
             </form>
         </div>
         <?php
@@ -1278,22 +1278,22 @@ final class Formulare_Plugin
 
     private function render_frontend_field($field, $form_id)
     {
-        $field_id = 'formulare-' . $form_id . '-' . $field['name'];
+        $field_id = 'kr-forms-' . $form_id . '-' . $field['name'];
         $required = ! empty($field['required']);
         ?>
-        <p class="formulare-field">
+        <p class="kr-forms-field">
             <label for="<?php echo esc_attr($field_id); ?>">
                 <?php echo wp_kses($field['label'], $this->get_allowed_label_html()); ?>
                 <?php if ($required) : ?>
-                    <span class="formulare-required">*</span>
+                    <span class="kr-forms-required">*</span>
                 <?php endif; ?>
             </label>
             <?php if ($field['type'] === 'textarea') : ?>
-                <textarea id="<?php echo esc_attr($field_id); ?>" name="formulare[<?php echo esc_attr($field['name']); ?>]" <?php echo $required ? 'required' : ''; ?>></textarea>
+                <textarea id="<?php echo esc_attr($field_id); ?>" name="kr_forms[<?php echo esc_attr($field['name']); ?>]" <?php echo $required ? 'required' : ''; ?>></textarea>
             <?php elseif ($field['type'] === 'checkbox') : ?>
-                <input id="<?php echo esc_attr($field_id); ?>" type="checkbox" name="formulare[<?php echo esc_attr($field['name']); ?>]" value="Ja" <?php echo $required ? 'required' : ''; ?>>
+                <input id="<?php echo esc_attr($field_id); ?>" type="checkbox" name="kr_forms[<?php echo esc_attr($field['name']); ?>]" value="Ja" <?php echo $required ? 'required' : ''; ?>>
             <?php else : ?>
-                <input id="<?php echo esc_attr($field_id); ?>" type="<?php echo esc_attr($field['type']); ?>" name="formulare[<?php echo esc_attr($field['name']); ?>]" <?php echo $required ? 'required' : ''; ?>>
+                <input id="<?php echo esc_attr($field_id); ?>" type="<?php echo esc_attr($field['type']); ?>" name="kr_forms[<?php echo esc_attr($field['name']); ?>]" <?php echo $required ? 'required' : ''; ?>>
             <?php endif; ?>
         </p>
         <?php
@@ -1313,7 +1313,7 @@ final class Formulare_Plugin
                 </select>
             </td>
             <td><input type="checkbox" name="fields[<?php echo esc_attr($index); ?>][required]" value="1" <?php checked(! empty($field['required'])); ?>></td>
-            <td><button type="button" class="button button-link-delete formulare-remove-field">Entfernen</button></td>
+            <td><button type="button" class="button button-link-delete kr-forms-remove-field">Entfernen</button></td>
         </tr>
         <?php
     }
@@ -1321,15 +1321,15 @@ final class Formulare_Plugin
     private function render_editor_preview($form)
     {
         ?>
-        <div class="formulare-preview-surface">
-            <iframe id="formulare-preview-frame" class="formulare-preview-frame" title="Formularvorschau"></iframe>
+        <div class="kr-forms-preview-surface">
+            <iframe id="kr-forms-preview-frame" class="kr-forms-preview-frame" title="Formularvorschau"></iframe>
         </div>
         <?php
     }
 
     private function get_frontend_preview_css()
     {
-        $path = FORMULARE_PLUGIN_DIR . 'assets/frontend.css';
+        $path = KR_FORMS_PLUGIN_DIR . 'assets/frontend.css';
 
         if (! file_exists($path) || ! is_readable($path)) {
             return '';
@@ -1366,7 +1366,7 @@ final class Formulare_Plugin
     private function render_frontend_notice($status, $form)
     {
         if ($status === 'success') {
-            return '<div class="formulare-notice formulare-notice-success">' . esc_html($form['success_message']) . '</div>';
+            return '<div class="kr-forms-notice kr-forms-notice-success">' . esc_html($form['success_message']) . '</div>';
         }
 
         $messages = array(
@@ -1383,7 +1383,7 @@ final class Formulare_Plugin
             return '';
         }
 
-        return '<div class="formulare-notice formulare-notice-error">' . esc_html($messages[$status]) . '</div>';
+        return '<div class="kr-forms-notice kr-forms-notice-error">' . esc_html($messages[$status]) . '</div>';
     }
 
     private function get_forms()
@@ -1475,7 +1475,7 @@ final class Formulare_Plugin
     private function ensure_admin_request($nonce_action)
     {
         if (! current_user_can('manage_options')) {
-            wp_die(esc_html__('Keine Berechtigung.', 'formulare'));
+            wp_die(esc_html__('Keine Berechtigung.', 'kr-forms'));
         }
 
         check_admin_referer($nonce_action);
@@ -1492,8 +1492,8 @@ final class Formulare_Plugin
     {
         $url = add_query_arg(
             array(
-                'formulare_status' => $status,
-                'formulare_id' => $form_id,
+                'kr_forms_status' => $status,
+                'kr_forms_id' => $form_id,
             ),
             $redirect
         );
@@ -1644,11 +1644,11 @@ final class Formulare_Plugin
 
     private function get_smtp_password($settings)
     {
-        if (defined('FORMULARE_SMTP_PASSWORD')) {
-            return (string) FORMULARE_SMTP_PASSWORD;
+        if (defined('KR_FORMS_SMTP_PASSWORD')) {
+            return (string) KR_FORMS_SMTP_PASSWORD;
         }
 
-        $env_password = getenv('FORMULARE_SMTP_PASSWORD');
+        $env_password = getenv('KR_FORMS_SMTP_PASSWORD');
         if ($env_password !== false && $env_password !== '') {
             return (string) $env_password;
         }
@@ -1662,11 +1662,11 @@ final class Formulare_Plugin
 
     private function has_external_smtp_password()
     {
-        if (defined('FORMULARE_SMTP_PASSWORD')) {
+        if (defined('KR_FORMS_SMTP_PASSWORD')) {
             return true;
         }
 
-        $env_password = getenv('FORMULARE_SMTP_PASSWORD');
+        $env_password = getenv('KR_FORMS_SMTP_PASSWORD');
 
         return $env_password !== false && $env_password !== '';
     }
@@ -1957,7 +1957,7 @@ final class Formulare_Plugin
         $ip = $this->get_request_ip();
         $window = (int) $settings['rate_limit_window_minutes'] * MINUTE_IN_SECONDS;
         $limit = (int) $settings['rate_limit_max_attempts'];
-        $key = 'formulare_rate_' . md5($form_id . '|' . $ip);
+        $key = 'kr_forms_rate_' . md5($form_id . '|' . $ip);
         $attempts = get_transient($key);
         $attempts = is_array($attempts) ? $attempts : array();
         $now = time();
@@ -2088,7 +2088,7 @@ final class Formulare_Plugin
         }
 
         $ip = $this->get_request_ip();
-        $throttle_key = 'formulare_alert_' . md5($type . '|' . $form_id . '|' . $ip);
+        $throttle_key = 'kr_forms_alert_' . md5($type . '|' . $form_id . '|' . $ip);
 
         if (get_transient($throttle_key)) {
             return;
@@ -2127,18 +2127,18 @@ final class Formulare_Plugin
             : $design['style_error_background'];
 
         $variables = array(
-            '--formulare-text-color:' . $design['style_text_color'],
-            '--formulare-label-color:' . $design['style_label_color'],
-            '--formulare-background:' . $background,
-            '--formulare-field-background:' . $field_background,
-            '--formulare-border-color:' . $design['style_border_color'],
-            '--formulare-button-background:' . $design['style_button_background'],
-            '--formulare-button-text:' . $design['style_button_text'],
-            '--formulare-success-background:' . $success_background,
-            '--formulare-success-text:' . $design['style_success_text'],
-            '--formulare-error-background:' . $error_background,
-            '--formulare-error-text:' . $design['style_error_text'],
-            '--formulare-radius:' . (int) $design['style_border_radius'] . 'px',
+            '--kr-forms-text-color:' . $design['style_text_color'],
+            '--kr-forms-label-color:' . $design['style_label_color'],
+            '--kr-forms-background:' . $background,
+            '--kr-forms-field-background:' . $field_background,
+            '--kr-forms-border-color:' . $design['style_border_color'],
+            '--kr-forms-button-background:' . $design['style_button_background'],
+            '--kr-forms-button-text:' . $design['style_button_text'],
+            '--kr-forms-success-background:' . $success_background,
+            '--kr-forms-success-text:' . $design['style_success_text'],
+            '--kr-forms-error-background:' . $error_background,
+            '--kr-forms-error-text:' . $design['style_error_text'],
+            '--kr-forms-radius:' . (int) $design['style_border_radius'] . 'px',
         );
 
         return implode(';', $variables);
@@ -2444,7 +2444,7 @@ final class Formulare_Plugin
         $token = wp_generate_password(20, false, false);
 
         set_transient(
-            'formulare_captcha_' . $token,
+            'kr_forms_captcha_' . $token,
             array(
                 'form_id' => $form_id,
                 'answer' => $answer,
@@ -2456,7 +2456,7 @@ final class Formulare_Plugin
             'token' => $token,
             'image_url' => add_query_arg(
                 array(
-                    'action' => 'formulare_captcha',
+                    'action' => 'kr_forms_captcha',
                     'token' => rawurlencode($token),
                 ),
                 admin_url('admin-post.php')
@@ -2466,15 +2466,15 @@ final class Formulare_Plugin
 
     private function validate_captcha_submission($post_data, $form_id)
     {
-        $token = isset($post_data['formulare_captcha_token']) ? sanitize_text_field(wp_unslash($post_data['formulare_captcha_token'])) : '';
-        $answer = isset($post_data['formulare_captcha_answer']) ? trim((string) wp_unslash($post_data['formulare_captcha_answer'])) : '';
+        $token = isset($post_data['kr_forms_captcha_token']) ? sanitize_text_field(wp_unslash($post_data['kr_forms_captcha_token'])) : '';
+        $answer = isset($post_data['kr_forms_captcha_answer']) ? trim((string) wp_unslash($post_data['kr_forms_captcha_answer'])) : '';
 
         if ($token === '' || $answer === '') {
             return false;
         }
 
-        $stored = get_transient('formulare_captcha_' . $token);
-        delete_transient('formulare_captcha_' . $token);
+        $stored = get_transient('kr_forms_captcha_' . $token);
+        delete_transient('kr_forms_captcha_' . $token);
 
         if (! is_array($stored) || empty($stored['answer']) || empty($stored['form_id'])) {
             return false;
@@ -2492,7 +2492,7 @@ final class Formulare_Plugin
     public function handle_captcha_image()
     {
         $token = isset($_GET['token']) ? sanitize_text_field(wp_unslash($_GET['token'])) : '';
-        $stored = get_transient('formulare_captcha_' . $token);
+        $stored = get_transient('kr_forms_captcha_' . $token);
 
         if (! is_array($stored) || empty($stored['answer'])) {
             status_header(404);
@@ -2574,14 +2574,14 @@ final class Formulare_Plugin
     {
         global $wpdb;
 
-        return $wpdb->prefix . 'formulare_security_log';
+        return $wpdb->prefix . 'kr_forms_security_log';
     }
 
     private function get_request_log_table_name()
     {
         global $wpdb;
 
-        return $wpdb->prefix . 'formulare_request_log';
+        return $wpdb->prefix . 'kr_forms_request_log';
     }
 
     private function create_security_log_table()

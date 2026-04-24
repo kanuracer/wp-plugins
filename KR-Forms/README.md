@@ -19,26 +19,23 @@ KR-Forms ist ein WordPress-Plugin zum Erstellen eigener Formulare mit Formular-B
 - Sicherheitsprotokoll in eigener Datenbanktabelle und optionale Alarm-E-Mail
 - Allgemeines Protokoll für alle Formularanfragen
 - Vorgefertigte Beispiele für Kontaktformular und Widerrufsformular
-- Shortcode-Ausgabe per `[formulare id="kontaktformular"]`
+- Shortcode-Ausgabe per `[kr-forms id="kontaktformular"]`
 - Frontend-Validierung und Spam-Schutz über Honeypot
 
 ## Installation
 
 1. Ordner `KR-Forms` in `wp-content/plugins/` kopieren.
 2. Plugin `KR-Forms` in WordPress aktivieren.
-3. Unter `KR-Forms` Formulare anlegen oder bearbeiten.
-4. Unter `KR-Forms > E-Mail-Einstellungen` Mailversand, SMTP und Sicherheit konfigurieren.
+3. Die Hauptdatei des Plugins ist `kr-forms.php`.
+4. Unter `KR-Forms` Formulare anlegen oder bearbeiten.
+5. Unter `KR-Forms > E-Mail-Einstellungen` Mailversand, SMTP und Sicherheit konfigurieren.
 
 ## Nutzung
 
-- Kontaktformular: `[formulare id="kontaktformular"]`
-- Widerrufsformular: `[formulare id="widerrufsformular"]`
+- Kontaktformular: `[kr-forms id="kontaktformular"]`
+- Widerrufsformular: `[kr-forms id="widerrufsformular"]`
 
 Weitere Formulare können im Admin erstellt und dann mit ihrer jeweiligen ID eingebunden werden.
-
-Hinweis zur Kompatibilität:
-- Der Shortcode bleibt aus Kompatibilitätsgründen weiterhin `[formulare ...]`.
-- Interne Optionsnamen, Action-Slugs und Datenbanktabellen bleiben ebenfalls unverändert bei `formulare_*`.
 
 ## Formulareditor
 
@@ -77,16 +74,16 @@ In der Formularzusammenfassung per E-Mail bleiben diese Links erhalten und werde
 
 - SMTP-Host, Port, Benutzername und Passwort werden in den Plugin-Einstellungen gespeichert.
 - Das SMTP-Passwort wird verschlüsselt in der Datenbank gespeichert.
-- Optional kann weiterhin `FORMULARE_SMTP_PASSWORD` in `wp-config.php` oder als Umgebungsvariable verwendet werden. Dieser Wert hat Vorrang.
+- Optional kann `KR_FORMS_SMTP_PASSWORD` in `wp-config.php` oder als Umgebungsvariable verwendet werden. Dieser Wert hat Vorrang.
 - Unter `Trusted Proxies` können einzelne IPs, CIDR-Bereiche oder Wildcards eingetragen werden, z. B. `172.19.*.*` oder `172.19.0.0/16`.
 - Proxy-Header wie `X-Forwarded-For` werden nur ausgewertet, wenn `REMOTE_ADDR` zu einem konfigurierten Trusted Proxy passt.
 
 ## Speicherung
 
-- SMTP- und Mail-Einstellungen werden in `wp_options` unter `formulare_email_settings` gespeichert.
-- Formulare inklusive Feldern, E-Mail-Text, Kunden-Bestätigung und Design werden in `wp_options` unter `formulare_forms` gespeichert.
-- Sicherheitsereignisse werden in der Tabelle `wp_formulare_security_log` gespeichert. Bei abweichendem Tabellenpräfix wird das jeweilige WordPress-Präfix verwendet.
-- Allgemeine Formularanfragen werden in der Tabelle `wp_formulare_request_log` gespeichert. Bei abweichendem Tabellenpräfix wird das jeweilige WordPress-Präfix verwendet.
+- SMTP- und Mail-Einstellungen werden in `wp_options` unter `kr_forms_email_settings` gespeichert.
+- Formulare inklusive Feldern, E-Mail-Text, Kunden-Bestätigung und Design werden in `wp_options` unter `kr_forms_forms` gespeichert.
+- Sicherheitsereignisse werden in der Tabelle `wp_kr_forms_security_log` gespeichert. Bei abweichendem Tabellenpräfix wird das jeweilige WordPress-Präfix verwendet.
+- Allgemeine Formularanfragen werden in der Tabelle `wp_kr_forms_request_log` gespeichert. Bei abweichendem Tabellenpräfix wird das jeweilige WordPress-Präfix verwendet.
 
 ## Protokolle
 
@@ -97,9 +94,24 @@ In der Formularzusammenfassung per E-Mail bleiben diese Links erhalten und werde
 
 ## Changelog
 
+### 2.0.0
+
+- Vollständige technische Umbenennung von `formulare` auf `KR-Forms` bzw. `kr_forms`.
+- Neuer Shortcode: `[kr-forms id="..."]`.
+- Admin-Slugs, Actions, Nonces, Query-Parameter und DOM-/CSS-Präfixe wurden auf `kr-forms` bzw. `kr_forms` umgestellt.
+- Optionsnamen wurden auf `kr_forms_*` umgestellt.
+- Datenbanktabellen wurden auf `wp_kr_forms_*` umgestellt.
+- Hauptdatei des Plugins ist jetzt `kr-forms.php`.
+- SMTP-Konstante wurde auf `KR_FORMS_SMTP_PASSWORD` umgestellt.
+
+Wichtig:
+- Bestehende Shortcodes `[formulare ...]` müssen auf `[kr-forms ...]` angepasst werden.
+- Bereits vorhandene Installationen benötigen wegen der neuen Optionsnamen und Tabellen eine bewusste Migration, wenn alte Daten übernommen werden sollen.
+
 ### 1.1.0
 
 - Feld-Labels unterstützen jetzt sichere Links mit `<a href="https://domain.tld">Linktext</a>`.
 - Links in Labels werden auch in der Formularzusammenfassung per E-Mail als Linktext mit URL ausgegeben.
 - Die Tabellenansicht im allgemeinen Protokoll wurde für lange URLs, Zusammenfassungen und Details verbessert.
-- Das Plugin wurde sichtbar auf den neuen Namen `KR-Forms` umgestellt.
+- Das Plugin wurde vollständig von `formulare` auf `KR-Forms` bzw. `kr_forms` umbenannt.
+- Shortcode, Slugs, Nonces, Optionsnamen, Datenbanktabellen, Query-Parameter und CSS-/DOM-Präfixe wurden entsprechend angepasst.
