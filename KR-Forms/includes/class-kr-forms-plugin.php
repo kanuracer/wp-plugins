@@ -56,25 +56,28 @@ final class KR_Forms_Plugin
     {
         if (get_option($this->settings_option) === false) {
             $legacy_settings = get_option($this->old_settings_option, false);
-            add_option(
+            update_option(
                 $this->settings_option,
-                is_array($legacy_settings) ? wp_parse_args($legacy_settings, $this->default_settings()) : $this->default_settings()
+                is_array($legacy_settings) ? wp_parse_args($legacy_settings, $this->default_settings()) : $this->default_settings(),
+                true
             );
         }
 
         if (get_option($this->forms_option) === false) {
             $legacy_forms = get_option($this->old_forms_option, false);
-            add_option(
+            update_option(
                 $this->forms_option,
-                is_array($legacy_forms) ? $legacy_forms : $this->default_forms()
+                is_array($legacy_forms) ? $legacy_forms : $this->default_forms(),
+                true
             );
         }
 
         if (get_option($this->legacy_design_option) === false) {
             $legacy_design = get_option($this->old_legacy_design_option, false);
-            add_option(
+            update_option(
                 $this->legacy_design_option,
-                is_array($legacy_design) ? wp_parse_args($legacy_design, $this->default_design_settings()) : $this->default_design_settings()
+                is_array($legacy_design) ? wp_parse_args($legacy_design, $this->default_design_settings()) : $this->default_design_settings(),
+                true
             );
         }
     }

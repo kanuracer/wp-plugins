@@ -95,6 +95,11 @@ In der Formularzusammenfassung per E-Mail bleiben diese Links erhalten und werde
 
 ## Changelog
 
+### 2.0.4
+
+- Initialisierung der Plugin-Optionen weiter gehärtet: Fehlende `kr_forms_*`-Optionen werden jetzt per `update_option()` erzwungen angelegt.
+- Alt-Daten aus `formulare_*` werden dabei weiterhin automatisch übernommen.
+
 ### 2.0.3
 
 - Initialisierung der Plugin-Optionen robuster gemacht: Fehlende `kr_forms_*`-Einträge werden beim Laden automatisch angelegt.
