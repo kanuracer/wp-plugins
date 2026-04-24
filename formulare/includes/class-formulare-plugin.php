@@ -127,6 +127,7 @@ final class Formulare_Plugin
             array(),
             FORMULARE_VERSION
         );
+
     }
 
     public function render_forms_page()
@@ -417,6 +418,42 @@ final class Formulare_Plugin
                         .replaceAll("'", '&#039;');
                 };
 
+                const sanitizePreviewLabel = function (value) {
+                    const template = document.createElement('template');
+                    template.innerHTML = String(value || '');
+
+                    const allowedTags = new Set(['A']);
+                    const allowedAttributes = {
+                        A: new Set(['href', 'title', 'target', 'rel']),
+                    };
+
+                    const sanitizeNode = function (node) {
+                        Array.from(node.children).forEach(function (child) {
+                            if (!allowedTags.has(child.tagName)) {
+                                child.replaceWith(document.createTextNode(child.textContent || ''));
+                                return;
+                            }
+
+                            Array.from(child.attributes).forEach(function (attribute) {
+                                if (!allowedAttributes[child.tagName].has(attribute.name.toLowerCase())) {
+                                    child.removeAttribute(attribute.name);
+                                }
+                            });
+
+                            const href = child.getAttribute('href');
+                            if (href && !/^(https?:|mailto:|tel:|\/|#)/i.test(href)) {
+                                child.removeAttribute('href');
+                            }
+
+                            sanitizeNode(child);
+                        });
+                    };
+
+                    sanitizeNode(template.content);
+
+                    return template.innerHTML || escapeHtml(value || 'Feld');
+                };
+
                 const getFieldValue = function (name, fallback = '') {
                     const input = formEditor.querySelector('[name="' + name + '"]');
                     return input ? input.value : fallback;
@@ -437,7 +474,7 @@ final class Formulare_Plugin
 
                 const buildPreviewField = function (label, type, required) {
                     const marker = required ? '<span class="formulare-required">*</span>' : '';
-                    const safeLabel = escapeHtml(label || 'Feld');
+                    const safeLabel = sanitizePreviewLabel(label || 'Feld');
                     if (type === 'textarea') {
                         return '<p class="formulare-field"><label>' + safeLabel + ' ' + marker + '</label><textarea disabled></textarea></p>';
                     }
@@ -813,45 +850,47 @@ final class Formulare_Plugin
         <div class="wrap formulare-admin">
             <h1>Allgemeines Protokoll</h1>
             <?php $this->render_admin_notice(); ?>
-            <div class="formulare-card formulare-settings-card">
+            <div class="formulare-card formulare-log-card">
                 <p>Hier werden alle Formularanfragen inklusive erfolgreicher und fehlgeschlagener Versuche protokolliert.</p>
                 <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                     <input type="hidden" name="action" value="formulare_clear_request_log">
                     <?php wp_nonce_field('formulare_clear_request_log'); ?>
                     <p><button type="submit" class="button button-secondary" onclick="return window.confirm('Allgemeines Protokoll wirklich leeren?');">Allgemeines Protokoll leeren</button></p>
                 </form>
-                <table class="widefat striped">
-                    <thead>
-                        <tr>
-                            <th>Zeitpunkt</th>
-                            <th>Status</th>
-                            <th>Formular</th>
-                            <th>Seite</th>
-                            <th>E-Mail</th>
-                            <th>Zusammenfassung</th>
-                            <th>Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($entries)) : ?>
+                <div class="formulare-table-wrap">
+                    <table class="widefat striped formulare-request-log-table">
+                        <thead>
                             <tr>
-                                <td colspan="7">Noch keine Einträge vorhanden.</td>
+                                <th>Zeitpunkt</th>
+                                <th>Status</th>
+                                <th>Formular</th>
+                                <th>Seite</th>
+                                <th>E-Mail</th>
+                                <th>Zusammenfassung</th>
+                                <th>Details</th>
                             </tr>
-                        <?php else : ?>
-                            <?php foreach ($entries as $entry) : ?>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($entries)) : ?>
                                 <tr>
-                                    <td><?php echo esc_html($entry['timestamp']); ?></td>
-                                    <td><?php echo esc_html($entry['status']); ?></td>
-                                    <td><?php echo esc_html($entry['form_name']); ?></td>
-                                    <td><code><?php echo esc_html($entry['page_url']); ?></code></td>
-                                    <td><?php echo esc_html($entry['email']); ?></td>
-                                    <td><pre class="formulare-log-summary"><?php echo esc_html($entry['summary']); ?></pre></td>
-                                    <td><?php echo esc_html($entry['details']); ?></td>
+                                    <td colspan="7">Noch keine Einträge vorhanden.</td>
                                 </tr>
-                            <?php endforeach; ?>
-                        <?php endif; ?>
-                    </tbody>
-                </table>
+                            <?php else : ?>
+                                <?php foreach ($entries as $entry) : ?>
+                                    <tr>
+                                        <td><?php echo esc_html($entry['timestamp']); ?></td>
+                                        <td><?php echo esc_html($entry['status']); ?></td>
+                                        <td><?php echo esc_html($entry['form_name']); ?></td>
+                                        <td><code class="formulare-log-url"><?php echo esc_html($entry['page_url']); ?></code></td>
+                                        <td><?php echo esc_html($entry['email']); ?></td>
+                                        <td><pre class="formulare-log-summary"><?php echo esc_html($entry['summary']); ?></pre></td>
+                                        <td class="formulare-log-details"><?php echo esc_html($entry['details']); ?></td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
         <?php
@@ -1244,7 +1283,7 @@ final class Formulare_Plugin
         ?>
         <p class="formulare-field">
             <label for="<?php echo esc_attr($field_id); ?>">
-                <?php echo esc_html($field['label']); ?>
+                <?php echo wp_kses($field['label'], $this->get_allowed_label_html()); ?>
                 <?php if ($required) : ?>
                     <span class="formulare-required">*</span>
                 <?php endif; ?>
@@ -1381,7 +1420,7 @@ final class Formulare_Plugin
         }
 
         foreach ($raw_fields as $raw_field) {
-            $label = isset($raw_field['label']) ? sanitize_text_field($raw_field['label']) : '';
+            $label = isset($raw_field['label']) ? $this->sanitize_field_label($raw_field['label']) : '';
             $name = isset($raw_field['name']) ? sanitize_key($raw_field['name']) : '';
             $type = isset($raw_field['type']) ? sanitize_key($raw_field['type']) : 'text';
             $required = ! empty($raw_field['required']);
@@ -2158,10 +2197,49 @@ final class Formulare_Plugin
         $lines = array();
 
         foreach ($form['fields'] as $field) {
-            $lines[] = sprintf('%s: %s', $field['label'], isset($values[$field['name']]) && $values[$field['name']] !== '' ? $values[$field['name']] : '-');
+            $lines[] = sprintf('%s: %s', $this->build_label_text_for_summary($field['label']), isset($values[$field['name']]) && $values[$field['name']] !== '' ? $values[$field['name']] : '-');
         }
 
         return implode("\n", $lines);
+    }
+
+    private function build_label_text_for_summary($label)
+    {
+        $label = wp_kses((string) $label, $this->get_allowed_label_html());
+
+        $label = preg_replace_callback(
+            '/<a\b[^>]*href=(["\'])(.*?)\1[^>]*>(.*?)<\/a>/is',
+            static function ($matches) {
+                $link_text = trim(wp_strip_all_tags($matches[3]));
+                $href = trim($matches[2]);
+
+                if ($href === '') {
+                    return $link_text;
+                }
+
+                return sprintf('%s (%s)', $link_text, $href);
+            },
+            $label
+        );
+
+        return trim(wp_strip_all_tags($label));
+    }
+
+    private function sanitize_field_label($label)
+    {
+        return trim(wp_kses((string) $label, $this->get_allowed_label_html()));
+    }
+
+    private function get_allowed_label_html()
+    {
+        return array(
+            'a' => array(
+                'href' => true,
+                'title' => true,
+                'target' => true,
+                'rel' => true,
+            ),
+        );
     }
 
     private function has_external_smtp_plugin()

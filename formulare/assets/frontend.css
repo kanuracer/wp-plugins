@@ -45,6 +45,12 @@
     color: var(--formulare-label-color);
 }
 
+.formulare-field label a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 0.14em;
+}
+
 .formulare-field input[type="text"],
 .formulare-field input[type="email"],
 .formulare-field input[type="tel"],

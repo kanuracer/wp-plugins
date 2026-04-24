@@ -8,6 +8,7 @@ Ein WordPress-Plugin zum Erstellen eigener Formulare mit Formular-Baukasten, for
 - Eigene Formularübersicht und separater Editor pro Formular
 - Pro Formular eigener E-Mail-Betreff, eigener E-Mail-Text und eigenes Design
 - Pro Formular optionale Bestätigungs-E-Mail mit Formularzusammenfassung an den Kunden
+- Feld-Labels unterstützen sichere Links mit `<a href="https://domain.tld">Linktext</a>`
 - Transparenter Formularhintergrund, transparenter Feld-Hintergrund und transparente Hinweisboxen pro Formular
 - Live-Vorschau im Editor mit speicherbarem Vorschau-Hintergrund
 - E-Mail-Einstellungen für Empfänger, Absender, Reply-To und SMTP
@@ -46,6 +47,18 @@ Die Bereiche im Editor sind in dieser Reihenfolge angeordnet:
 
 Die Option für die Bestätigungs-E-Mail an den Kunden wird direkt pro Formular im Bereich `E-Mail` gesetzt.
 
+Feld-Labels dürfen Links enthalten. Beispiel:
+
+```html
+Hiermit bestätige ich den Widerruf gemäß den <a href="https://domain.tld/agb">AGBs</a>.
+```
+
+Wichtig: Links müssen mit einer vollständigen URL wie `https://domain.tld` angegeben werden.
+Wird `https://` weggelassen und z. B. nur `domain.tld` eingetragen, behandelt der Browser den Wert als relative URL zur Formularseite.
+Dadurch kann aus `domain.tld` je nach Einbindungsseite z. B. `https://domain.tld/test/domain.tld` werden.
+
+In der Formularzusammenfassung per E-Mail bleiben diese Links erhalten und werden im Textformat als Linktext mit URL ausgegeben.
+
 ## Platzhalter für den E-Mail-Text
 
 - `{form_name}`
@@ -77,3 +90,11 @@ Die Option für die Bestätigungs-E-Mail an den Kunden wird direkt pro Formular 
 - `Allgemeines Protokoll` speichert erfolgreiche und fehlgeschlagene Formularanfragen ohne IP-Anzeige im Admin.
 - Das allgemeine Protokoll enthält zusätzlich eine Formularzusammenfassung, damit Eingaben auch bei Mailfehlern nachvollziehbar bleiben.
 - Beide Protokolle können im Admin geleert werden.
+
+## Changelog
+
+### 1.1.0
+
+- Feld-Labels unterstützen jetzt sichere Links mit `<a href="https://domain.tld">Linktext</a>`.
+- Links in Labels werden auch in der Formularzusammenfassung per E-Mail als Linktext mit URL ausgegeben.
+- Die Tabellenansicht im allgemeinen Protokoll wurde für lange URLs, Zusammenfassungen und Details verbessert.

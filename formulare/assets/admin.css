@@ -83,6 +83,10 @@
     max-width: 860px;
 }
 
+.formulare-admin .formulare-log-card {
+    max-width: none;
+}
+
 .formulare-admin .formulare-actions {
     display: flex;
     gap: 12px;
@@ -109,9 +113,67 @@
 .formulare-admin .formulare-log-summary {
     margin: 0;
     white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
     font-family: Consolas, Monaco, monospace;
     font-size: 12px;
     line-height: 1.45;
+}
+
+.formulare-admin .formulare-table-wrap {
+    overflow-x: auto;
+}
+
+.formulare-admin .formulare-request-log-table {
+    table-layout: fixed;
+    min-width: 1200px;
+}
+
+.formulare-admin .formulare-request-log-table th,
+.formulare-admin .formulare-request-log-table td {
+    vertical-align: top;
+}
+
+.formulare-admin .formulare-request-log-table th:nth-child(1),
+.formulare-admin .formulare-request-log-table td:nth-child(1) {
+    width: 12%;
+}
+
+.formulare-admin .formulare-request-log-table th:nth-child(2),
+.formulare-admin .formulare-request-log-table td:nth-child(2) {
+    width: 10%;
+}
+
+.formulare-admin .formulare-request-log-table th:nth-child(3),
+.formulare-admin .formulare-request-log-table td:nth-child(3) {
+    width: 9%;
+}
+
+.formulare-admin .formulare-request-log-table th:nth-child(4),
+.formulare-admin .formulare-request-log-table td:nth-child(4) {
+    width: 25%;
+}
+
+.formulare-admin .formulare-request-log-table th:nth-child(5),
+.formulare-admin .formulare-request-log-table td:nth-child(5) {
+    width: 15%;
+}
+
+.formulare-admin .formulare-request-log-table th:nth-child(6),
+.formulare-admin .formulare-request-log-table td:nth-child(6) {
+    width: 19%;
+}
+
+.formulare-admin .formulare-request-log-table th:nth-child(7),
+.formulare-admin .formulare-request-log-table td:nth-child(7) {
+    width: 10%;
+}
+
+.formulare-admin .formulare-log-url,
+.formulare-admin .formulare-log-details {
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: anywhere;
 }
 
 @media (max-width: 1100px) {
