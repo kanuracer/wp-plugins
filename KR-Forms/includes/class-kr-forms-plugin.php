@@ -10,7 +10,7 @@ final class KR_Forms_Plugin
 
     private $forms_option = 'kr_forms_forms';
     private $settings_option = 'kr_forms_email_settings';
-    private $legacy_design_option = 'kr_forms_design_settings';
+    private $design_option = 'kr_forms_design_settings';
 
     public static function instance()
     {
@@ -1404,10 +1404,10 @@ final class KR_Forms_Plugin
             return array();
         }
 
-        $legacy_design = $this->legacy_design_settings();
+        $default_design = $this->get_default_design_settings();
 
         foreach ($forms as $key => $form) {
-            $forms[$key] = $this->normalize_form($form, $legacy_design);
+            $forms[$key] = $this->normalize_form($form, $default_design);
         }
 
         return $forms;
@@ -2287,7 +2287,7 @@ final class KR_Forms_Plugin
         return false;
     }
 
-    private function normalize_form($form, $legacy_design = array())
+    private function normalize_form($form, $default_design = array())
     {
         $defaults = $this->new_form();
         $form = wp_parse_args($form, $defaults);
@@ -2295,7 +2295,7 @@ final class KR_Forms_Plugin
         $form['email_template'] = ! empty($form['email_template']) ? $form['email_template'] : $this->default_email_template();
         $form['customer_confirmation_enabled'] = ! empty($form['customer_confirmation_enabled']);
         $form['captcha_enabled'] = ! empty($form['captcha_enabled']);
-        $form['design'] = $this->sanitize_design_settings(wp_parse_args(isset($form['design']) ? $form['design'] : array(), $legacy_design));
+        $form['design'] = $this->sanitize_design_settings(wp_parse_args(isset($form['design']) ? $form['design'] : array(), $default_design));
 
         if (empty($form['fields'])) {
             $form['fields'] = $defaults['fields'];
@@ -2304,11 +2304,11 @@ final class KR_Forms_Plugin
         return $form;
     }
 
-    private function legacy_design_settings()
+    private function get_default_design_settings()
     {
-        $legacy = get_option($this->legacy_design_option, array());
+        $design = get_option($this->design_option, array());
 
-        return $this->sanitize_design_settings(is_array($legacy) ? $legacy : array());
+        return $this->sanitize_design_settings(is_array($design) ? $design : array());
     }
 
     private function new_form()
@@ -2341,7 +2341,7 @@ final class KR_Forms_Plugin
                     'required' => true,
                 ),
             ),
-            'design' => $this->legacy_design_settings(),
+            'design' => $this->get_default_design_settings(),
         );
     }
 
@@ -2357,7 +2357,7 @@ final class KR_Forms_Plugin
 
     private function default_forms()
     {
-        $design = $this->legacy_design_settings();
+        $design = $this->get_default_design_settings();
 
         return array(
             'kontaktformular' => array(

@@ -98,6 +98,7 @@ In der Formularzusammenfassung per E-Mail bleiben diese Links erhalten und werde
 
 - Neue Design-Option für den Absenden-Button: `rund` oder `eckig`.
 - Live-Vorschau und Frontend-Ausgabe berücksichtigen jetzt die gewählte Button-Form.
+- Verbliebene interne Alt-Bezeichner aus der Umstellung wurden entfernt und auf die aktuelle `KR-Forms`-Namensstruktur bereinigt.
 
 ### 2.0.1
 
@@ -105,7 +106,7 @@ In der Formularzusammenfassung per E-Mail bleiben diese Links erhalten und werde
 
 ### 2.0.0
 
-- Vollständige technische Umbenennung von `formulare` auf `KR-Forms` bzw. `kr_forms`.
+- Technische Namensstruktur auf `KR-Forms`, `kr_forms` und `kr-forms` vereinheitlicht.
 - Neuer Shortcode: `[kr-forms id="..."]`.
 - Admin-Slugs, Actions, Nonces, Query-Parameter und DOM-/CSS-Präfixe wurden auf `kr-forms` bzw. `kr_forms` umgestellt.
 - Optionsnamen wurden auf `kr_forms_*` umgestellt.
@@ -114,7 +115,7 @@ In der Formularzusammenfassung per E-Mail bleiben diese Links erhalten und werde
 - SMTP-Konstante wurde auf `KR_FORMS_SMTP_PASSWORD` umgestellt.
 
 Wichtig:
-- Bestehende Shortcodes `[formulare ...]` müssen auf `[kr-forms ...]` angepasst werden.
+- Der verwendete Shortcode ist `[kr-forms ...]`.
 - Bereits vorhandene Installationen benötigen wegen der neuen Optionsnamen und Tabellen eine bewusste Migration, wenn alte Daten übernommen werden sollen.
 
 ### 1.1.0
@@ -122,5 +123,3 @@ Wichtig:
 - Feld-Labels unterstützen jetzt sichere Links mit `<a href="https://domain.tld">Linktext</a>`.
 - Links in Labels werden auch in der Formularzusammenfassung per E-Mail als Linktext mit URL ausgegeben.
 - Die Tabellenansicht im allgemeinen Protokoll wurde für lange URLs, Zusammenfassungen und Details verbessert.
-- Das Plugin wurde vollständig von `formulare` auf `KR-Forms` bzw. `kr_forms` umbenannt.
-- Shortcode, Slugs, Nonces, Optionsnamen, Datenbanktabellen, Query-Parameter und CSS-/DOM-Präfixe wurden entsprechend angepasst.
