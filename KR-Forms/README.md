@@ -24,7 +24,7 @@ KR-Forms ist ein WordPress-Plugin zum Erstellen eigener Formulare mit Formular-B
 
 ## Installation
 
-1. Ordner `formulare` in `wp-content/plugins/` kopieren.
+1. Ordner `KR-Forms` in `wp-content/plugins/` kopieren.
 2. Plugin `KR-Forms` in WordPress aktivieren.
 3. Unter `KR-Forms` Formulare anlegen oder bearbeiten.
 4. Unter `KR-Forms > E-Mail-Einstellungen` Mailversand, SMTP und Sicherheit konfigurieren.
