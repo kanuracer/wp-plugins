@@ -80,10 +80,11 @@ In der Formularzusammenfassung per E-Mail bleiben diese Links erhalten und werde
 
 ## Speicherung
 
-- SMTP- und Mail-Einstellungen werden in `wp_options` unter `kr_forms_email_settings` gespeichert.
-- Formulare inklusive Feldern, E-Mail-Text, Kunden-Bestätigung und Design werden in `wp_options` unter `kr_forms_forms` gespeichert.
-- Sicherheitsereignisse werden in der Tabelle `wp_kr_forms_security_log` gespeichert. Bei abweichendem Tabellenpräfix wird das jeweilige WordPress-Präfix verwendet.
-- Allgemeine Formularanfragen werden in der Tabelle `wp_kr_forms_request_log` gespeichert. Bei abweichendem Tabellenpräfix wird das jeweilige WordPress-Präfix verwendet.
+- SMTP- und Mail-Einstellungen werden in der WordPress-Optionstabelle unter `kr_forms_email_settings` gespeichert.
+- Formulare inklusive Feldern, E-Mail-Text, Kunden-Bestätigung und Design werden in der WordPress-Optionstabelle unter `kr_forms_forms` gespeichert.
+- Die tatsächliche Optionstabelle richtet sich nach dem aktiven WordPress-Tabellenpräfix, also z. B. `wp_options`, `gowp_options` oder ein anderes individuelles Präfix.
+- Sicherheitsereignisse werden in der Tabelle `<prefix>kr_forms_security_log` gespeichert.
+- Allgemeine Formularanfragen werden in der Tabelle `<prefix>kr_forms_request_log` gespeichert.
 
 ## Protokolle
 
@@ -93,6 +94,11 @@ In der Formularzusammenfassung per E-Mail bleiben diese Links erhalten und werde
 - Beide Protokolle können im Admin geleert werden.
 
 ## Changelog
+
+### 2.0.3
+
+- Initialisierung der Plugin-Optionen robuster gemacht: Fehlende `kr_forms_*`-Einträge werden beim Laden automatisch angelegt.
+- Vorhandene Alt-Daten aus `formulare_*` werden dabei automatisch in die neuen `kr_forms_*`-Optionen übernommen.
 
 ### 2.0.2
 

@@ -11,6 +11,9 @@ final class KR_Forms_Plugin
     private $forms_option = 'kr_forms_forms';
     private $settings_option = 'kr_forms_email_settings';
     private $legacy_design_option = 'kr_forms_design_settings';
+    private $old_forms_option = 'formulare_forms';
+    private $old_settings_option = 'formulare_email_settings';
+    private $old_legacy_design_option = 'formulare_design_settings';
 
     public static function instance()
     {
@@ -24,21 +27,14 @@ final class KR_Forms_Plugin
     public static function activate()
     {
         $plugin = self::instance();
-
-        if (get_option($plugin->settings_option) === false) {
-            add_option($plugin->settings_option, $plugin->default_settings());
-        }
-
-        if (get_option($plugin->forms_option) === false) {
-            add_option($plugin->forms_option, $plugin->default_forms());
-        }
-
+        $plugin->bootstrap_storage();
         $plugin->create_security_log_table();
         $plugin->create_request_log_table();
     }
 
     private function __construct()
     {
+        add_action('init', array($this, 'bootstrap_storage'), 1);
         add_action('admin_menu', array($this, 'register_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
@@ -54,6 +50,33 @@ final class KR_Forms_Plugin
         add_action('admin_post_kr_forms_submit', array($this, 'handle_form_submission'));
         add_action('phpmailer_init', array($this, 'configure_phpmailer'));
         add_shortcode('kr-forms', array($this, 'render_shortcode'));
+    }
+
+    public function bootstrap_storage()
+    {
+        if (get_option($this->settings_option) === false) {
+            $legacy_settings = get_option($this->old_settings_option, false);
+            add_option(
+                $this->settings_option,
+                is_array($legacy_settings) ? wp_parse_args($legacy_settings, $this->default_settings()) : $this->default_settings()
+            );
+        }
+
+        if (get_option($this->forms_option) === false) {
+            $legacy_forms = get_option($this->old_forms_option, false);
+            add_option(
+                $this->forms_option,
+                is_array($legacy_forms) ? $legacy_forms : $this->default_forms()
+            );
+        }
+
+        if (get_option($this->legacy_design_option) === false) {
+            $legacy_design = get_option($this->old_legacy_design_option, false);
+            add_option(
+                $this->legacy_design_option,
+                is_array($legacy_design) ? wp_parse_args($legacy_design, $this->default_design_settings()) : $this->default_design_settings()
+            );
+        }
     }
 
     public function register_admin_menu()
