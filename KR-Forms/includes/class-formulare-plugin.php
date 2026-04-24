@@ -59,8 +59,8 @@ final class Formulare_Plugin
     public function register_admin_menu()
     {
         add_menu_page(
-            'Formulare',
-            'Formulare',
+            'KR-Forms',
+            'KR-Forms',
             'manage_options',
             'formulare',
             array($this, 'render_forms_page'),
@@ -140,7 +140,7 @@ final class Formulare_Plugin
         $settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
         ?>
         <div class="wrap formulare-admin">
-            <h1>Formulare</h1>
+            <h1>KR-Forms</h1>
             <?php $this->render_admin_notice(); ?>
 
             <div class="formulare-card">
@@ -1032,11 +1032,11 @@ final class Formulare_Plugin
         }
 
         $settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
-        $subject = 'SMTP-Test: Formulare Plugin';
+        $subject = 'SMTP-Test: KR-Forms';
         $message = implode(
             "\n",
             array(
-                'Dies ist eine Test-E-Mail des Plugins "Formulare".',
+                'Dies ist eine Test-E-Mail des Plugins "KR-Forms".',
                 '',
                 'Zeitpunkt: ' . wp_date('d.m.Y H:i:s'),
                 'SMTP über Plugin aktiv: ' . (! empty($settings['smtp_enabled']) ? 'Ja' : 'Nein'),
@@ -2096,7 +2096,7 @@ final class Formulare_Plugin
 
         set_transient($throttle_key, '1', 30 * MINUTE_IN_SECONDS);
 
-        $subject = 'Sicherheitsalarm: Formulare Plugin';
+        $subject = 'Sicherheitsalarm: KR-Forms';
         $message = implode("\n", array(
             'Es wurde ein Sicherheitsereignis erkannt.',
             '',

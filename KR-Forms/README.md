@@ -1,6 +1,6 @@
-# Formulare WordPress Plugin
+# KR-Forms WordPress Plugin
 
-Ein WordPress-Plugin zum Erstellen eigener Formulare mit Formular-Baukasten, formularbezogenem Design, SMTP-Funktion und Sicherheitsfunktionen ohne externe Captcha-Dienste.
+KR-Forms ist ein WordPress-Plugin zum Erstellen eigener Formulare mit Formular-Baukasten, formularbezogenem Design, SMTP-Funktion und Sicherheitsfunktionen ohne externe Captcha-Dienste.
 
 ## Funktionen
 
@@ -25,9 +25,9 @@ Ein WordPress-Plugin zum Erstellen eigener Formulare mit Formular-Baukasten, for
 ## Installation
 
 1. Ordner `formulare` in `wp-content/plugins/` kopieren.
-2. Plugin in WordPress aktivieren.
-3. Unter `Formulare` Formulare anlegen oder bearbeiten.
-4. Unter `Formulare > E-Mail-Einstellungen` Mailversand, SMTP und Sicherheit konfigurieren.
+2. Plugin `KR-Forms` in WordPress aktivieren.
+3. Unter `KR-Forms` Formulare anlegen oder bearbeiten.
+4. Unter `KR-Forms > E-Mail-Einstellungen` Mailversand, SMTP und Sicherheit konfigurieren.
 
 ## Nutzung
 
@@ -35,6 +35,10 @@ Ein WordPress-Plugin zum Erstellen eigener Formulare mit Formular-Baukasten, for
 - Widerrufsformular: `[formulare id="widerrufsformular"]`
 
 Weitere Formulare können im Admin erstellt und dann mit ihrer jeweiligen ID eingebunden werden.
+
+Hinweis zur Kompatibilität:
+- Der Shortcode bleibt aus Kompatibilitätsgründen weiterhin `[formulare ...]`.
+- Interne Optionsnamen, Action-Slugs und Datenbanktabellen bleiben ebenfalls unverändert bei `formulare_*`.
 
 ## Formulareditor
 
@@ -98,3 +102,4 @@ In der Formularzusammenfassung per E-Mail bleiben diese Links erhalten und werde
 - Feld-Labels unterstützen jetzt sichere Links mit `<a href="https://domain.tld">Linktext</a>`.
 - Links in Labels werden auch in der Formularzusammenfassung per E-Mail als Linktext mit URL ausgegeben.
 - Die Tabellenansicht im allgemeinen Protokoll wurde für lange URLs, Zusammenfassungen und Details verbessert.
+- Das Plugin wurde sichtbar auf den neuen Namen `KR-Forms` umgestellt.

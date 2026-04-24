@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: Formulare
+ * Plugin Name: KR-Forms
  * Plugin URI: https://github.com/kanuracer/wp-plugins/tree/main/formulare
- * Description: Erstellt Formulare wie Kontakt- oder Widerrufsformulare mit Formular-Baukasten und E-Mail-Einstellungen.
+ * Description: KR-Forms erstellt Kontakt-, Anfrage- und Widerrufsformulare mit Formular-Baukasten und E-Mail-Einstellungen.
  * Version: 1.1.0
  * Author: kanuracer
  * Author URI: https://kanuracer.eu
