@@ -329,6 +329,15 @@ final class KR_Forms_Plugin
                                     <td><input id="style_button_text" name="design[style_button_text]" type="color" value="<?php echo esc_attr($form['design']['style_button_text']); ?>"></td>
                                 </tr>
                                 <tr>
+                                    <th scope="row"><label for="style_button_shape">Button-Form</label></th>
+                                    <td>
+                                        <select id="style_button_shape" name="design[style_button_shape]">
+                                            <option value="round" <?php selected($form['design']['style_button_shape'], 'round'); ?>>Rund</option>
+                                            <option value="square" <?php selected($form['design']['style_button_shape'], 'square'); ?>>Eckig</option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
                                     <th scope="row"><label for="style_success_background">Erfolgsmeldung Hintergrund</label></th>
                                     <td>
                                         <input id="style_success_background" name="design[style_success_background]" type="color" value="<?php echo esc_attr($form['design']['style_success_background']); ?>">
@@ -494,6 +503,7 @@ final class KR_Forms_Plugin
                         '--kr-forms-border-color:' + getFieldValue('design[style_border_color]', '#c7d0db'),
                         '--kr-forms-button-background:' + getFieldValue('design[style_button_background]', '#0f766e'),
                         '--kr-forms-button-text:' + getFieldValue('design[style_button_text]', '#ffffff'),
+                        '--kr-forms-button-radius:' + (getFieldValue('design[style_button_shape]', 'round') === 'square' ? '0px' : '999px'),
                         '--kr-forms-success-background:' + getBackgroundValue('design[style_success_background_mode]', 'design[style_success_background]'),
                         '--kr-forms-success-text:' + getFieldValue('design[style_success_text]', '#14532d'),
                         '--kr-forms-error-background:' + getBackgroundValue('design[style_error_background_mode]', 'design[style_error_background]'),
@@ -1462,6 +1472,7 @@ final class KR_Forms_Plugin
             'style_border_color' => $this->sanitize_color_setting(isset($settings['style_border_color']) ? $settings['style_border_color'] : $defaults['style_border_color']) ?: $defaults['style_border_color'],
             'style_button_background' => $this->sanitize_color_setting(isset($settings['style_button_background']) ? $settings['style_button_background'] : $defaults['style_button_background']) ?: $defaults['style_button_background'],
             'style_button_text' => $this->sanitize_color_setting(isset($settings['style_button_text']) ? $settings['style_button_text'] : $defaults['style_button_text']) ?: $defaults['style_button_text'],
+            'style_button_shape' => $this->sanitize_button_shape_setting(isset($settings['style_button_shape']) ? $settings['style_button_shape'] : $defaults['style_button_shape']),
             'style_success_background_mode' => isset($settings['style_success_background_mode']) && $settings['style_success_background_mode'] === 'transparent' ? 'transparent' : 'solid',
             'style_success_background' => $this->sanitize_color_setting(isset($settings['style_success_background']) ? $settings['style_success_background'] : $defaults['style_success_background']) ?: $defaults['style_success_background'],
             'style_success_text' => $this->sanitize_color_setting(isset($settings['style_success_text']) ? $settings['style_success_text'] : $defaults['style_success_text']) ?: $defaults['style_success_text'],
@@ -1543,6 +1554,11 @@ final class KR_Forms_Plugin
         $radius = absint($value);
 
         return min($radius, 40);
+    }
+
+    private function sanitize_button_shape_setting($value)
+    {
+        return $value === 'square' ? 'square' : 'round';
     }
 
     private function sanitize_port_setting($value)
@@ -2134,6 +2150,7 @@ final class KR_Forms_Plugin
             '--kr-forms-border-color:' . $design['style_border_color'],
             '--kr-forms-button-background:' . $design['style_button_background'],
             '--kr-forms-button-text:' . $design['style_button_text'],
+            '--kr-forms-button-radius:' . ($design['style_button_shape'] === 'square' ? '0px' : '999px'),
             '--kr-forms-success-background:' . $success_background,
             '--kr-forms-success-text:' . $design['style_success_text'],
             '--kr-forms-error-background:' . $error_background,
@@ -2783,6 +2800,7 @@ final class KR_Forms_Plugin
             'style_border_color' => '#c7d0db',
             'style_button_background' => '#0f766e',
             'style_button_text' => '#ffffff',
+            'style_button_shape' => 'round',
             'style_success_background_mode' => 'solid',
             'style_success_background' => '#dcfce7',
             'style_success_text' => '#14532d',

@@ -6,6 +6,7 @@
     --kr-forms-border-color: #c7d0db;
     --kr-forms-button-background: #0f766e;
     --kr-forms-button-text: #ffffff;
+    --kr-forms-button-radius: 999px;
     --kr-forms-success-background: #dcfce7;
     --kr-forms-success-text: #14532d;
     --kr-forms-error-background: #fee2e2;
@@ -91,7 +92,7 @@
 .kr-forms-submit {
     justify-self: start;
     border: 0;
-    border-radius: 999px;
+    border-radius: var(--kr-forms-button-radius);
     padding: 12px 20px;
     font-weight: 700;
     color: var(--kr-forms-button-text);

@@ -94,6 +94,11 @@ In der Formularzusammenfassung per E-Mail bleiben diese Links erhalten und werde
 
 ## Changelog
 
+### 2.0.2
+
+- Neue Design-Option für den Absenden-Button: `rund` oder `eckig`.
+- Live-Vorschau und Frontend-Ausgabe berücksichtigen jetzt die gewählte Button-Form.
+
 ### 2.0.1
 
 - BOM am Anfang der PHP-Dateien entfernt, damit der WordPress-Block-Editor beim Speichern keine ungültige JSON-Antwort mehr meldet.
