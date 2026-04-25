@@ -121,7 +121,7 @@ Beispiel für die Update-Metadaten:
 
 ## Changelog
 
-### 2.2.0
+### 2.2.1
 
 - Formulare werden nicht mehr in `wp_options`, sondern ebenfalls in der eigenen Tabelle `wp_kr_forms_settings` gespeichert.
 - Vorhandene Formulare aus `kr_forms_forms` werden automatisch in die eigene Plugin-Tabelle übernommen.
