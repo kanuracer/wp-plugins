@@ -126,6 +126,7 @@ Beispiel für die Update-Metadaten:
 - Formulare werden nicht mehr in `wp_options`, sondern ebenfalls in der eigenen Tabelle `wp_kr_forms_settings` gespeichert.
 - Vorhandene Formulare aus `kr_forms_forms` werden automatisch in die eigene Plugin-Tabelle übernommen.
 - `KR-Forms` arbeitet damit für eigene Konfigurations- und Formulardaten vollständig ohne `wp_options`.
+- Externe Updatefunktion über `update.json` ergänzt, inklusive manueller und automatischer Updates über den WordPress-Plugin-Manager.
 
 ### 2.1.0
 
