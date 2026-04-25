@@ -28,7 +28,7 @@ KR-Forms ist ein WordPress-Plugin zum Erstellen eigener Formulare mit Formular-B
 2. Plugin `KR-Forms` in WordPress aktivieren.
 3. Die Hauptdatei des Plugins ist `kr-forms.php`.
 4. Unter `KR-Forms` Formulare anlegen oder bearbeiten.
-5. Unter `KR-Forms > E-Mail-Einstellungen` Mailversand, SMTP und Sicherheit konfigurieren.
+5. Unter `KR-Forms > Einstellungen` Mailversand, SMTP, Sicherheit und Updates konfigurieren.
 
 ## Nutzung
 
@@ -78,10 +78,37 @@ In der Formularzusammenfassung per E-Mail bleiben diese Links erhalten und werde
 - Unter `Trusted Proxies` können einzelne IPs, CIDR-Bereiche oder Wildcards eingetragen werden, z. B. `172.19.*.*` oder `172.19.0.0/16`.
 - Proxy-Header wie `X-Forwarded-For` werden nur ausgewertet, wenn `REMOTE_ADDR` zu einem konfigurierten Trusted Proxy passt.
 
+## Updates
+
+- Das Plugin unterstützt einen eigenen Update-Feed außerhalb des WordPress-Plugin-Verzeichnisses.
+- Die URL dazu wird in den Plugin-Einstellungen unter `Update-Metadaten-URL` hinterlegt.
+- Sobald dort eine gültige JSON-URL eingetragen ist, erscheinen verfügbare Updates im WordPress-Plugin-Manager.
+- Automatische Updates können anschließend direkt im Plugin-Manager von WordPress aktiviert werden.
+
+Beispiel für die Update-Metadaten:
+
+```json
+{
+  "version": "2.2.0",
+  "download_url": "https://domain.tld/downloads/kr-forms-2.2.0.zip",
+  "details_url": "https://domain.tld/kr-forms/",
+  "homepage": "https://domain.tld/kr-forms/",
+  "requires": "6.4",
+  "tested": "6.8.3",
+  "requires_php": "7.4",
+  "last_updated": "2026-04-25 12:00:00",
+  "sections": {
+    "description": "<p>KR-Forms Update-Feed</p>",
+    "installation": "<p>ZIP herunterladen und aktualisieren.</p>",
+    "changelog": "<p><strong>2.2.0</strong><br>Eigene Plugin-Tabelle für Einstellungen und Formulare, plus externer Update-Feed.</p>"
+  }
+}
+```
+
 ## Speicherung
 
-- SMTP- und Mail-Einstellungen werden in `wp_options` unter `kr_forms_email_settings` gespeichert.
-- Formulare inklusive Feldern, E-Mail-Text, Kunden-Bestätigung und Design werden in `wp_options` unter `kr_forms_forms` gespeichert.
+- Formulare, Design, SMTP-, Mail-, Sicherheits- und Update-Einstellungen werden in der eigenen Tabelle `wp_kr_forms_settings` gespeichert. Bei abweichendem Tabellenpräfix wird das jeweilige WordPress-Präfix verwendet.
+- Eigene Plugin-Daten werden damit nicht mehr in `wp_options` gespeichert.
 - Sicherheitsereignisse werden in der Tabelle `wp_kr_forms_security_log` gespeichert. Bei abweichendem Tabellenpräfix wird das jeweilige WordPress-Präfix verwendet.
 - Allgemeine Formularanfragen werden in der Tabelle `wp_kr_forms_request_log` gespeichert. Bei abweichendem Tabellenpräfix wird das jeweilige WordPress-Präfix verwendet.
 
@@ -93,6 +120,20 @@ In der Formularzusammenfassung per E-Mail bleiben diese Links erhalten und werde
 - Beide Protokolle können im Admin geleert werden.
 
 ## Changelog
+
+### 2.2.0
+
+- Formulare werden nicht mehr in `wp_options`, sondern ebenfalls in der eigenen Tabelle `wp_kr_forms_settings` gespeichert.
+- Vorhandene Formulare aus `kr_forms_forms` werden automatisch in die eigene Plugin-Tabelle übernommen.
+- `KR-Forms` arbeitet damit für eigene Konfigurations- und Formulardaten vollständig ohne `wp_options`.
+
+### 2.1.0
+
+- Plugin-Einstellungen werden nicht mehr in `wp_options`, sondern in der eigenen Tabelle `wp_kr_forms_settings` gespeichert.
+- Vorhandene Einstellungen aus `kr_forms_email_settings` und `kr_forms_design_settings` werden automatisch in die neue Tabelle übernommen.
+- Eigener Update-Mechanismus für den WordPress-Plugin-Manager ergänzt.
+- Updates können über eine konfigurierbare JSON-Metadaten-URL bereitgestellt werden.
+- Manuelle Updates und automatische Updates über den Plugin-Manager werden damit unterstützt.
 
 ### 2.0.2
 

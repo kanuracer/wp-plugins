@@ -11,6 +11,11 @@ final class KR_Forms_Plugin
     private $forms_option = 'kr_forms_forms';
     private $settings_option = 'kr_forms_email_settings';
     private $design_option = 'kr_forms_design_settings';
+    private $settings_table = 'kr_forms_settings';
+    private $forms_row_key = 'forms';
+    private $settings_row_key = 'email_settings';
+    private $design_row_key = 'design_settings';
+    private $settings_storage_ready = false;
 
     public static function instance()
     {
@@ -25,20 +30,15 @@ final class KR_Forms_Plugin
     {
         $plugin = self::instance();
 
-        if (get_option($plugin->settings_option) === false) {
-            add_option($plugin->settings_option, $plugin->default_settings());
-        }
-
-        if (get_option($plugin->forms_option) === false) {
-            add_option($plugin->forms_option, $plugin->default_forms());
-        }
-
+        $plugin->ensure_settings_storage();
         $plugin->create_security_log_table();
         $plugin->create_request_log_table();
     }
 
     private function __construct()
     {
+        $this->ensure_settings_storage();
+
         add_action('admin_menu', array($this, 'register_admin_menu'));
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_assets'));
         add_action('wp_enqueue_scripts', array($this, 'enqueue_frontend_assets'));
@@ -53,7 +53,253 @@ final class KR_Forms_Plugin
         add_action('admin_post_nopriv_kr_forms_submit', array($this, 'handle_form_submission'));
         add_action('admin_post_kr_forms_submit', array($this, 'handle_form_submission'));
         add_action('phpmailer_init', array($this, 'configure_phpmailer'));
+        add_filter('pre_set_site_transient_update_plugins', array($this, 'filter_plugin_updates'));
+        add_filter('plugins_api', array($this, 'filter_plugin_information'), 10, 3);
         add_shortcode('kr-forms', array($this, 'render_shortcode'));
+    }
+
+    public function filter_plugin_updates($transient)
+    {
+        if (! is_object($transient) || empty($transient->checked)) {
+            return $transient;
+        }
+
+        $metadata = $this->get_update_metadata();
+
+        if (empty($metadata['version']) || empty($metadata['download_url'])) {
+            return $transient;
+        }
+
+        $plugin_file = plugin_basename(KR_FORMS_PLUGIN_FILE);
+        $current_version = isset($transient->checked[$plugin_file]) ? (string) $transient->checked[$plugin_file] : KR_FORMS_VERSION;
+        $update_item = (object) array(
+            'slug' => 'kr-forms',
+            'plugin' => $plugin_file,
+            'new_version' => (string) $metadata['version'],
+            'package' => esc_url_raw($metadata['download_url']),
+            'url' => ! empty($metadata['details_url']) ? esc_url_raw($metadata['details_url']) : '',
+            'tested' => ! empty($metadata['tested']) ? (string) $metadata['tested'] : '',
+            'requires' => ! empty($metadata['requires']) ? (string) $metadata['requires'] : '',
+            'requires_php' => ! empty($metadata['requires_php']) ? (string) $metadata['requires_php'] : '',
+        );
+
+        if (version_compare($metadata['version'], $current_version, '>')) {
+            $transient->response[$plugin_file] = $update_item;
+        } else {
+            $transient->no_update[$plugin_file] = $update_item;
+        }
+
+        return $transient;
+    }
+
+    public function filter_plugin_information($result, $action, $args)
+    {
+        if ($action !== 'plugin_information' || empty($args->slug) || $args->slug !== 'kr-forms') {
+            return $result;
+        }
+
+        $metadata = $this->get_update_metadata();
+
+        if (empty($metadata['version'])) {
+            return $result;
+        }
+
+        $sections = ! empty($metadata['sections']) && is_array($metadata['sections']) ? $metadata['sections'] : array();
+
+        return (object) array(
+            'name' => 'KR-Forms',
+            'slug' => 'kr-forms',
+            'version' => (string) $metadata['version'],
+            'author' => '<a href="https://kanuracer.eu">kanuracer</a>',
+            'homepage' => ! empty($metadata['homepage']) ? esc_url_raw($metadata['homepage']) : '',
+            'requires' => ! empty($metadata['requires']) ? (string) $metadata['requires'] : '',
+            'tested' => ! empty($metadata['tested']) ? (string) $metadata['tested'] : '',
+            'requires_php' => ! empty($metadata['requires_php']) ? (string) $metadata['requires_php'] : '',
+            'last_updated' => ! empty($metadata['last_updated']) ? (string) $metadata['last_updated'] : '',
+            'download_link' => ! empty($metadata['download_url']) ? esc_url_raw($metadata['download_url']) : '',
+            'sections' => array(
+                'description' => ! empty($sections['description']) ? wp_kses_post($sections['description']) : 'KR-Forms',
+                'installation' => ! empty($sections['installation']) ? wp_kses_post($sections['installation']) : '',
+                'changelog' => ! empty($sections['changelog']) ? wp_kses_post($sections['changelog']) : '',
+            ),
+            'banners' => array(),
+            'icons' => array(),
+        );
+    }
+
+    private function ensure_settings_storage()
+    {
+        if ($this->settings_storage_ready) {
+            return;
+        }
+
+        $this->create_settings_table();
+        $this->migrate_settings_to_table();
+        $this->settings_storage_ready = true;
+    }
+
+    private function create_settings_table()
+    {
+        global $wpdb;
+
+        $table_name = $this->get_settings_table_name();
+        $table_exists = $wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $table_name));
+
+        if ($table_exists === $table_name) {
+            return;
+        }
+
+        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
+
+        $charset_collate = $wpdb->get_charset_collate();
+        $sql = "CREATE TABLE {$table_name} (
+            setting_key varchar(191) NOT NULL,
+            setting_value longtext NULL,
+            PRIMARY KEY  (setting_key)
+        ) {$charset_collate};";
+
+        dbDelta($sql);
+    }
+
+    private function migrate_settings_to_table()
+    {
+        if ($this->get_storage_value($this->forms_row_key, null) === null) {
+            $legacy_forms = get_option($this->forms_option, null);
+            $forms = is_array($legacy_forms) ? $legacy_forms : $this->default_forms();
+            $this->set_storage_value($this->forms_row_key, $forms);
+        }
+
+        if ($this->get_storage_value($this->settings_row_key, null) === null) {
+            $legacy_settings = get_option($this->settings_option, null);
+            $settings = is_array($legacy_settings) ? wp_parse_args($legacy_settings, $this->default_settings()) : $this->default_settings();
+            $this->set_storage_value($this->settings_row_key, $settings);
+        }
+
+        if ($this->get_storage_value($this->design_row_key, null) === null) {
+            $legacy_design = get_option($this->design_option, null);
+            $design = is_array($legacy_design) ? $this->sanitize_design_settings($legacy_design) : $this->default_design_settings();
+            $this->set_storage_value($this->design_row_key, $design);
+        }
+
+        delete_option($this->forms_option);
+        delete_option($this->settings_option);
+        delete_option($this->design_option);
+    }
+
+    private function get_settings_table_name()
+    {
+        global $wpdb;
+
+        return $wpdb->prefix . $this->settings_table;
+    }
+
+    private function get_storage_value($key, $default = null)
+    {
+        global $wpdb;
+
+        $this->create_settings_table();
+
+        $value = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT setting_value FROM {$this->get_settings_table_name()} WHERE setting_key = %s",
+                $key
+            )
+        );
+
+        if ($value === null) {
+            return $default;
+        }
+
+        return maybe_unserialize($value);
+    }
+
+    private function set_storage_value($key, $value)
+    {
+        global $wpdb;
+
+        $this->create_settings_table();
+
+        $wpdb->replace(
+            $this->get_settings_table_name(),
+            array(
+                'setting_key' => $key,
+                'setting_value' => maybe_serialize($value),
+            ),
+            array('%s', '%s')
+        );
+    }
+
+    private function get_settings()
+    {
+        $this->ensure_settings_storage();
+
+        return wp_parse_args($this->get_storage_value($this->settings_row_key, array()), $this->default_settings());
+    }
+
+    private function save_settings($settings)
+    {
+        $this->ensure_settings_storage();
+        $this->set_storage_value($this->settings_row_key, wp_parse_args($settings, $this->default_settings()));
+    }
+
+    private function save_forms($forms)
+    {
+        $this->ensure_settings_storage();
+        $this->set_storage_value($this->forms_row_key, is_array($forms) ? $forms : array());
+    }
+
+    private function get_default_design_settings()
+    {
+        $this->ensure_settings_storage();
+
+        return $this->sanitize_design_settings($this->get_storage_value($this->design_row_key, array()));
+    }
+
+    private function get_update_metadata_url()
+    {
+        if (defined('KR_FORMS_UPDATE_METADATA_URL') && KR_FORMS_UPDATE_METADATA_URL) {
+            return esc_url_raw((string) KR_FORMS_UPDATE_METADATA_URL);
+        }
+
+        $settings = $this->get_settings();
+
+        return ! empty($settings['update_metadata_url']) ? esc_url_raw($settings['update_metadata_url']) : '';
+    }
+
+    private function get_update_metadata()
+    {
+        $url = $this->get_update_metadata_url();
+
+        if ($url === '') {
+            return array();
+        }
+
+        $response = wp_remote_get(
+            $url,
+            array(
+                'timeout' => 10,
+                'headers' => array(
+                    'Accept' => 'application/json',
+                ),
+            )
+        );
+
+        if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
+            return array();
+        }
+
+        $metadata = json_decode(wp_remote_retrieve_body($response), true);
+
+        if (! is_array($metadata)) {
+            return array();
+        }
+
+        return $metadata;
+    }
+
+    private function clear_update_metadata_cache()
+    {
+        delete_site_transient('update_plugins');
     }
 
     public function register_admin_menu()
@@ -79,8 +325,8 @@ final class KR_Forms_Plugin
 
         add_submenu_page(
             'kr-forms',
-            'E-Mail-Einstellungen',
-            'E-Mail-Einstellungen',
+            'Einstellungen',
+            'Einstellungen',
             'manage_options',
             'kr-forms-settings',
             array($this, 'render_settings_page')
@@ -137,7 +383,6 @@ final class KR_Forms_Plugin
         }
 
         $forms = $this->get_forms();
-        $settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
         ?>
         <div class="wrap kr-forms-admin">
             <h1>KR-Forms</h1>
@@ -593,10 +838,10 @@ final class KR_Forms_Plugin
             wp_die(esc_html__('Du hast keine Berechtigung für diese Seite.', 'kr-forms'));
         }
 
-        $settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
+        $settings = $this->get_settings();
         ?>
         <div class="wrap kr-forms-admin">
-            <h1>E-Mail-Einstellungen</h1>
+            <h1>Einstellungen</h1>
             <?php $this->render_admin_notice(); ?>
 
             <div class="kr-forms-card kr-forms-settings-card">
@@ -764,6 +1009,17 @@ final class KR_Forms_Plugin
                             <td>
                                 <textarea id="trusted_proxies" name="trusted_proxies" rows="5" class="large-text code"><?php echo esc_textarea($settings['trusted_proxies']); ?></textarea>
                                 <p class="description">Nur wenn <code>REMOTE_ADDR</code> hier passt, werden Proxy-Header wie <code>X-Forwarded-For</code> ausgewertet. Erlaubt sind einzelne IPs, CIDR und Wildcards wie <code>172.19.*.*</code>.</p>
+                            </td>
+                        </tr>
+                    </table>
+
+                    <h2>Updates</h2>
+                    <table class="form-table">
+                        <tr>
+                            <th scope="row"><label for="update_metadata_url">Update-Metadaten-URL</label></th>
+                            <td>
+                                <input id="update_metadata_url" name="update_metadata_url" type="url" class="regular-text code" value="<?php echo esc_attr($settings['update_metadata_url']); ?>" placeholder="https://domain.tld/kr-forms/update.json">
+                                <p class="description">Diese JSON-URL liefert WordPress die verfügbare Version, Download-URL und den Changelog. Sobald hier eine gültige URL hinterlegt ist, erscheinen Updates normal im Plugin-Manager. Automatische Updates können dann direkt dort aktiviert werden.</p>
                             </td>
                         </tr>
                     </table>
@@ -943,13 +1199,13 @@ final class KR_Forms_Plugin
             'design' => $this->sanitize_design_settings(isset($_POST['design']) ? wp_unslash($_POST['design']) : array()),
         );
 
-        update_option($this->forms_option, $forms);
-        $settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
+        $this->save_forms($forms);
+        $settings = $this->get_settings();
         $settings['editor_preview_background'] = $this->sanitize_color_setting(
             isset($_POST['editor_preview_background']) ? wp_unslash($_POST['editor_preview_background']) : $settings['editor_preview_background'],
             '#f6f7f7'
         );
-        update_option($this->settings_option, $settings);
+        $this->save_settings($settings);
 
         $this->redirect_admin('kr-forms-editor', array(
             'message' => 'saved',
@@ -966,7 +1222,7 @@ final class KR_Forms_Plugin
 
         if ($form_id && isset($forms[$form_id])) {
             unset($forms[$form_id]);
-            update_option($this->forms_option, $forms);
+            $this->save_forms($forms);
         }
 
         $this->redirect_admin('kr-forms', array('message' => 'deleted'));
@@ -976,7 +1232,7 @@ final class KR_Forms_Plugin
     {
         $this->ensure_admin_request('kr_forms_save_settings');
 
-        $existing_settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
+        $existing_settings = $this->get_settings();
         $submitted_smtp_password = isset($_POST['smtp_password']) ? sanitize_text_field(wp_unslash($_POST['smtp_password'])) : '';
         $smtp_password = $existing_settings['smtp_password'];
 
@@ -1009,9 +1265,11 @@ final class KR_Forms_Plugin
             'security_alerts_enabled' => ! empty($_POST['security_alerts_enabled']),
             'security_alert_email' => isset($_POST['security_alert_email']) ? sanitize_email(wp_unslash($_POST['security_alert_email'])) : '',
             'trusted_proxies' => $this->sanitize_trusted_proxies_setting(isset($_POST['trusted_proxies']) ? wp_unslash($_POST['trusted_proxies']) : ''),
+            'update_metadata_url' => isset($_POST['update_metadata_url']) ? esc_url_raw(wp_unslash($_POST['update_metadata_url'])) : '',
         );
 
-        update_option($this->settings_option, wp_parse_args($settings, $this->default_settings()));
+        $this->save_settings($settings);
+        $this->clear_update_metadata_cache();
 
         $this->redirect_admin('kr-forms-settings', array('message' => 'settings_saved'));
     }
@@ -1041,7 +1299,7 @@ final class KR_Forms_Plugin
             $this->redirect_admin('kr-forms-settings', array('message' => 'smtp_test_invalid'));
         }
 
-        $settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
+        $settings = $this->get_settings();
         $subject = 'SMTP-Test: KR-Forms';
         $message = implode(
             "\n",
@@ -1153,7 +1411,7 @@ final class KR_Forms_Plugin
             $this->redirect_submission($redirect, 'validation_error', $form_id);
         }
 
-        $settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
+        $settings = $this->get_settings();
         $recipient = $settings['recipient_email'] ?: get_option('admin_email');
         $from_name = $settings['from_name'] ?: get_bloginfo('name');
         $from_email = $settings['from_email'] ?: get_option('admin_email');
@@ -1262,7 +1520,7 @@ final class KR_Forms_Plugin
 
     public function configure_phpmailer($phpmailer)
     {
-        $settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
+        $settings = $this->get_settings();
 
         if (empty($settings['smtp_enabled']) || $this->has_external_smtp_plugin()) {
             return;
@@ -1356,7 +1614,7 @@ final class KR_Forms_Plugin
         $messages = array(
             'saved' => array('updated', 'Formular wurde gespeichert.'),
             'deleted' => array('updated', 'Formular wurde gelöscht.'),
-            'settings_saved' => array('updated', 'E-Mail-Einstellungen wurden gespeichert.'),
+            'settings_saved' => array('updated', 'Einstellungen wurden gespeichert.'),
             'request_log_cleared' => array('updated', 'Allgemeines Protokoll wurde geleert.'),
             'security_log_cleared' => array('updated', 'Sicherheitsprotokoll wurde geleert.'),
             'smtp_test_sent' => array('updated', 'SMTP-Test wurde versendet.'),
@@ -1398,7 +1656,8 @@ final class KR_Forms_Plugin
 
     private function get_forms()
     {
-        $forms = get_option($this->forms_option, array());
+        $this->ensure_settings_storage();
+        $forms = $this->get_storage_value($this->forms_row_key, array());
 
         if (! is_array($forms)) {
             return array();
@@ -1793,7 +2052,7 @@ final class KR_Forms_Plugin
             return 'unbekannt';
         }
 
-        $settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
+        $settings = $this->get_settings();
 
         if (! $this->is_trusted_proxy_ip($remote_addr, $settings['trusted_proxies'])) {
             return $remote_addr;
@@ -1964,7 +2223,7 @@ final class KR_Forms_Plugin
 
     private function check_rate_limit($form_id, $form_name)
     {
-        $settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
+        $settings = $this->get_settings();
 
         if (empty($settings['rate_limit_enabled'])) {
             return true;
@@ -2001,7 +2260,7 @@ final class KR_Forms_Plugin
 
     private function record_security_event($type, $form_id, $form_name, $details, $notify = false)
     {
-        $settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
+        $settings = $this->get_settings();
 
         if (! empty($settings['security_logging_enabled'])) {
             $this->insert_security_log_entry(array(
@@ -2096,7 +2355,7 @@ final class KR_Forms_Plugin
 
     private function send_security_alert($type, $form_id, $form_name, $details)
     {
-        $settings = wp_parse_args(get_option($this->settings_option, array()), $this->default_settings());
+        $settings = $this->get_settings();
         $recipient = $settings['security_alert_email'] ?: ($settings['recipient_email'] ?: get_option('admin_email'));
 
         if (! is_email($recipient)) {
@@ -2302,13 +2561,6 @@ final class KR_Forms_Plugin
         }
 
         return $form;
-    }
-
-    private function get_default_design_settings()
-    {
-        $design = get_option($this->design_option, array());
-
-        return $this->sanitize_design_settings(is_array($design) ? $design : array());
     }
 
     private function new_form()
@@ -2784,6 +3036,7 @@ final class KR_Forms_Plugin
             'security_alerts_enabled' => false,
             'security_alert_email' => '',
             'trusted_proxies' => '',
+            'update_metadata_url' => '',
             'editor_preview_background' => '#f6f7f7',
         );
     }
