@@ -523,7 +523,7 @@ final class KR_Forms_Plugin
                                     <th scope="row"><label for="kr-forms-template">E-Mail-Text</label></th>
                                     <td>
                                         <textarea id="kr-forms-template" name="email_template" rows="10" class="large-text code"><?php echo esc_textarea($form['email_template']); ?></textarea>
-                                        <p class="description">Verfügbare Platzhalter: <code>{form_name}</code>, <code>{page_url}</code>, <code>{submitted_at}</code>, <code>{all_fields}</code>, <code>{field:name}</code>.</p>
+                                        <p class="description">Verfügbare Platzhalter für Betreff und Text: <code>{form_name}</code>, <code>{page_url}</code>, <code>{submitted_at}</code>, <code>{all_fields}</code>, <code>{field:name}</code> oder <code>{field:Label}</code>.</p>
                                     </td>
                                 </tr>
                             </table>
@@ -1415,7 +1415,7 @@ final class KR_Forms_Plugin
         $recipient = $settings['recipient_email'] ?: get_option('admin_email');
         $from_name = $settings['from_name'] ?: get_bloginfo('name');
         $from_email = $settings['from_email'] ?: get_option('admin_email');
-        $subject = $form['email_subject'] ?: 'Neue Formularanfrage';
+        $subject = $this->build_email_subject($form, $values, $redirect);
 
         $headers = array(
             'Content-Type: text/plain; charset=UTF-8',
@@ -2422,6 +2422,22 @@ final class KR_Forms_Plugin
 
     private function build_email_message($form, $values, $page_url)
     {
+        $message = strtr($form['email_template'], $this->build_email_replacements($form, $values, $page_url));
+
+        return trim($message);
+    }
+
+    private function build_email_subject($form, $values, $page_url)
+    {
+        $subject = $form['email_subject'] ?: 'Neue Formularanfrage';
+        $subject = strtr($subject, $this->build_email_replacements($form, $values, $page_url));
+        $subject = preg_replace('/[\r\n\t]+/', ' ', $subject);
+
+        return trim(wp_strip_all_tags((string) $subject));
+    }
+
+    private function build_email_replacements($form, $values, $page_url)
+    {
         $replacements = array(
             '{form_name}' => $form['name'],
             '{page_url}' => $page_url,
@@ -2429,13 +2445,45 @@ final class KR_Forms_Plugin
             '{all_fields}' => $this->build_all_fields_text($form, $values),
         );
 
-        foreach ($values as $key => $value) {
-            $replacements['{field:' . $key . '}'] = $value !== '' ? $value : '-';
+        foreach ($form['fields'] as $field) {
+            $field_name = isset($field['name']) ? $field['name'] : '';
+            $label = isset($field['label']) ? $this->build_label_text_for_summary($field['label']) : '';
+            $value = isset($values[$field_name]) && $values[$field_name] !== '' ? $values[$field_name] : '-';
+
+            if ($field_name !== '') {
+                $replacements['{field:' . $field_name . '}'] = $value;
+            }
+
+            foreach ($this->build_field_label_placeholder_keys($label) as $placeholder_key) {
+                $replacements['{field:' . $placeholder_key . '}'] = $value;
+            }
         }
 
-        $message = strtr($form['email_template'], $replacements);
+        return $replacements;
+    }
 
-        return trim($message);
+    private function build_field_label_placeholder_keys($label)
+    {
+        $label = trim((string) $label);
+
+        if ($label === '') {
+            return array();
+        }
+
+        $keys = array($label);
+        $slug = sanitize_title($label);
+
+        if ($slug !== '') {
+            $keys[] = $slug;
+        }
+
+        $key = sanitize_key(str_replace(array(' ', '-'), '_', $label));
+
+        if ($key !== '') {
+            $keys[] = $key;
+        }
+
+        return array_values(array_unique($keys));
     }
 
     private function send_customer_confirmation($form, $values, $page_url, $recipient, $settings)

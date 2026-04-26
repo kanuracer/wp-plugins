@@ -61,15 +61,36 @@ Dadurch kann aus `domain.tld` je nach Einbindungsseite z. B. `https://domain.tld
 
 In der Formularzusammenfassung per E-Mail bleiben diese Links erhalten und werden im Textformat als Linktext mit URL ausgegeben.
 
-## Platzhalter für den E-Mail-Text
+## Platzhalter für E-Mail-Betreff und E-Mail-Text
 
 - `{form_name}`
 - `{page_url}`
 - `{submitted_at}`
 - `{all_fields}`
-- `{field:name}` für ein einzelnes Feld, z. B. `{field:email}`
+- `{field:name}` für ein einzelnes Feld nach technischem Feldnamen, z. B. `{field:email}`
+- `{field:Label}` für ein einzelnes Feld nach sichtbarem Label, z. B. `{field:Kundenname}` oder `{field:kundenname}`
 
 `{submitted_at}` wird im Format `DD.MM.YYYY HH:MM:SS` ausgegeben.
+
+Beispiel: Wenn ein Formularfeld das Label `Kundenname` und den technischen Namen `kundenname` hat, kann der eingetragene Wert so verwendet werden:
+
+```text
+Betreff: Neue Anfrage von {field:Kundenname}
+Betreff alternativ: Neue Anfrage von {field:kundenname}
+```
+
+Im E-Mail-Text funktioniert derselbe Platzhalter:
+
+```text
+Hallo,
+
+{field:Kundenname} hat das Formular {form_name} abgesendet.
+
+Alle Angaben:
+{all_fields}
+```
+
+Bei Labels mit Leerzeichen kann entweder das sichtbare Label oder die normalisierte Schreibweise genutzt werden. Aus `Vor- und Nachname` wird z. B. zusätzlich `{field:vor-und-nachname}`.
 
 ## SMTP und Sicherheit
 
@@ -121,6 +142,10 @@ Beispiel für die Update-Metadaten:
 - Beide Protokolle können im Admin geleert werden.
 
 ## Changelog
+
+### 2.2.2
+
+- Feld-Platzhalter funktionieren jetzt auch im E-Mail-Betreff und können neben dem technischen Feldnamen auch über das sichtbare Label angesprochen werden.
 
 ### 2.2.1
 
